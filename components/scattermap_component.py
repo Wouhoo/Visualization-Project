@@ -26,8 +26,8 @@ def render(app: Dash, data: DataFrame, id: str) -> dcc.Graph:
     def display_click_data(value):
         color = None if value == [] else value
         colorSeq = None if value == [] or value not in PREDEFINED_COLORS.keys() else PREDEFINED_COLORS[value]
-
-        fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",width=1600, height=700,
+        #width=1600, height=700,
+        fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
                              zoom=3,
                              custom_data=["UID"],
                              hover_data=["Present.at.time.of.bite", "Shark.behaviour","Injury.location","Diversionary.action.taken"],

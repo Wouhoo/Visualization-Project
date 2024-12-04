@@ -1,37 +1,44 @@
-from jbi100_app.main import app
-from jbi100_app.views.menu import make_menu_layout
-from jbi100_app.views.main_map import MainMap
-from jbi100_app.data import get_data
+import pandas as pd
+from dash import Dash, html, Output, Input
+import dash_bootstrap_components as dbc
+from dash_bootstrap_components.themes import BOOTSTRAP
 
-from dash import html
-import plotly.express as px
-from dash.dependencies import Input, Output
+from components import dropdown_component, scattermap_component, barplot_component
+
+df = pd.read_excel('sharks_clean.xlsx')
+plotable_columns = ["Victim.injury", "State", "Site.category", "Provoked/unprovoked",
+                     "Victim.activity", "Injury.severity", "Victim.gender", "Data.source"]
+gradient_columns = ["Incident.month", "Incident.year", "Shark.length.m", "Victim.age", "Time.of.incident"]
 
 
-if __name__ == '__main__':
-    # Create data
-    df = get_data()
-
-    # Instantiate custom views
-    main_map = MainMap(df, "Shark attacks", "Incident.year")
-
-    app.layout = html.Div(
-        id="app-container",
+def create_layout(app: Dash) -> html.Div:
+    return html.Div(
+        className = "app-div",
         children=[
-            html.Div(
-                id="main-map",
-                className="twelve columns",
-                children=[main_map]
-            )
-        ],
+                dbc.Row([
+                    dbc.Col(html.Div(children=[
+                        barplot_component.render(app, id="bar_plot", data=df),
+                        dropdown_component.render(app, id="color_dropdown", name="Color Attribute",
+                                                  values={col.replace(".", " "): col for col in
+                                                          plotable_columns + gradient_columns}),
+                        dropdown_component.render(app, id="barplot_dropdown", name="Barplot Attribute",
+                                                  values={col.replace(".", " "): col for col in plotable_columns})
+                    ])),
+                    dbc.Col(html.Div(children=[
+                        scattermap_component.render(app, data=df, id="map")
+                    ]), width = 6)
+                ])
+
+
+
+        ]
     )
 
-    # Define interactions
-    #@app.callback(
-    #    Output(main_map.html_id, "figure"), [
-    #    Input("select-color-scatter-1", "value"),
-    #])
-    #def update_scatter_1(selected_color, selected_data):
-    #    return main_map.update(selected_color, selected_data)
 
-    app.run_server(debug=False, dev_tools_ui=False)
+app = Dash(external_stylesheets=[BOOTSTRAP])
+
+app.title = "Map"
+app.layout = create_layout(app)
+
+
+app.run_server(debug=True)
