@@ -21,7 +21,7 @@ def render(app: Dash, data: DataFrame, id: str) -> dcc.Graph:
     #When the value of color_dropdown changes, update the map with appropriate colors.
     @app.callback(
         Output("map", "figure"),
-        Input("color_dropdown", "value")
+        Input("map_dropdown", "value")
     )
     def display_click_data(value):
         color = None if value == [] else value
