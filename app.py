@@ -1,6 +1,5 @@
 import pandas as pd
-from dash import Dash, html, Output, Input
-import dash_bootstrap_components as dbc
+from dash import Dash, html
 from dash_bootstrap_components.themes import BOOTSTRAP
 
 from components import dropdown_component, scattermap_component, barplot_component
@@ -46,6 +45,5 @@ app = Dash(external_stylesheets=[BOOTSTRAP])
 
 app.title = "Map"
 app.layout = create_layout(app)
-
 
 app.run_server(debug=True)
