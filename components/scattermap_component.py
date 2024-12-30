@@ -7,6 +7,9 @@ from dash.dependencies import Input, Output, State
 #Predefined colors for specific attributes
 PREDEFINED_COLORS = {"Provoked/unprovoked": ["#00c49d","#c42e00","#dbdbdb"],
                      "Victim.gender":["#de05ff","#058aff","#dbdbdb"]}
+#Plotly default color sequence (in order of normal selection).
+PLOTLY_DEFAULT_COLORS = ['#636EFA','#EF553B','#00CC96','#AB63FA','#FFA15A','#19D3F3','#FF6692',
+                        '#B6E880','#FF97FF','#FECB52']
 
 """
 Creates a new scatter map instance component.
@@ -43,6 +46,8 @@ def render(app: Dash, data: DataFrame, id: str) -> dcc.Graph:
         #On clicking the bar plot, highlight all points with the same value as the clicked bar, on the column selected by
         #the barplot attribute dropdwon.
         elif trigger == "bar_plot":
+            colorIndex = bar_clicked["points"][0]["curveNumber"]
+            selectedColor = PLOTLY_DEFAULT_COLORS[colorIndex % len(PLOTLY_DEFAULT_COLORS)]
             columnValue = bar_clicked["points"][0]["x"]
             columnName = bar_dropdown_value
             data["highlight"] = data[columnName].apply(lambda x : "1" if x == columnValue else "0")
@@ -51,7 +56,7 @@ def render(app: Dash, data: DataFrame, id: str) -> dcc.Graph:
                                  zoom=3,
                                  custom_data=["UID"],
                                  hover_data=["Present.at.time.of.bite", "Shark.behaviour","Injury.location","Diversionary.action.taken"],
-                                 color=data["highlight"], color_discrete_map={"1": "red", "0": "gray"})
+                                 color=data["highlight"], color_discrete_map={"1": selectedColor, "0": "gray"})
 
             fig.update_layout(map=dict(style="dark"))
             fig.update(layout_showlegend=False)
