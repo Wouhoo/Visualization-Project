@@ -23,18 +23,17 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         Output("stacked_bar", "figure"),
         [Input("map", "selectedData"),
          Input("stackedbar_dropdown_x", "value"),
-         Input("stackedbar_dropdown_color", "value")]
+         Input("stackedbar_dropdown_color", "value"),
+         Input("stackedbar_normalize_checkbox", "value")]
     )
-    def update_figure(selected_data, x_feature, color_feature):
-        # TEST: Currently hardcoded to always normalize (so all bars are the same height)
-        # We can also allow the user to decide this through a checkbox.
-        normalize = False
-
+    def update_figure(selected_data, x_feature, color_feature, normalize):
         select_all_points = False
 
-        if x_feature == [] or color_feature == []: # Possible upgrade: if color_feature == [], make the usual bar chart (without color)
+        if x_feature == [] or x_feature == "-":
             return px.bar(None)
         else:
+            if color_feature == [] or color_feature == "-": # Effectively this uses the default bar chart if no color attribute is selected
+                color_feature = x_feature
             if selected_data is None:
                 select_all_points = True
 

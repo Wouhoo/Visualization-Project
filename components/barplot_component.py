@@ -36,7 +36,7 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
 
         select_all_points = False
 
-        if feature == []:
+        if feature == [] or feature == "-":
             return px.bar(None)
         else:
             if selected_data is None:

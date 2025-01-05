@@ -2,7 +2,7 @@ import pandas as pd
 from dash import Dash, html, dcc, Input, Output
 from dash_bootstrap_components.themes import BOOTSTRAP
 
-from components import dropdown_component, scattermap_component, barplot_component, scatterplot_component, parcat_component, stackedbar_component
+from components import dropdown_component, scattermap_component, barplot_component, scatterplot_component, parcat_component, stackedbar_component, checklist_component
 
 app = Dash(external_stylesheets=[BOOTSTRAP])
 
@@ -12,7 +12,7 @@ df = pd.read_excel('sharks_clean.xlsx')
 
 # Options for dropdowns
 plotable_columns = ["Incident.month", "Victim.injury", "State", "Site.category", "Provoked/unprovoked",
-                     "Victim.activity", "Injury.severity", "Victim.gender", "Data.source"]
+                     "Victim.activity", "Injury.severity", "Victim.gender", "Data.source", "-"]
 gradient_columns = ["Incident.month", "Incident.year", "Shark.length.m", "Victim.age", "Time.of.incident"]
 
 # Create actual layout
@@ -61,6 +61,13 @@ def create_layout(app: Dash) -> html.Div:
                                                         values={col.replace(".", " "): col for col in
                                                                 plotable_columns + gradient_columns})
                         ]),
+                    # Checklists
+                    html.Div(
+                        className = "Checklist",
+                        children=[
+                            checklist_component.render(app, id="stackedbar_normalize_checkbox", values=["Normalize stacked bar chart?"])
+                        ]
+                    )
             ]),
             # Main map
             html.Div(

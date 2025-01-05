@@ -27,7 +27,7 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         select_all_points = False
 
         # Empty scatterplot if no features are provided
-        if x_feature == [] or y_feature == []:
+        if x_feature == [] or x_feature == "-" or y_feature == [] or y_feature == "-":
             return px.scatter(None)
         else:
             if selected_data is None:
