@@ -29,7 +29,6 @@ def render(app: Dash, data: DataFrame, id: str) -> dcc.Graph:
         prevent_initial_call=True
     )
     def change_display(color_dropdown_value, bar_clicked, bar_dropdown_value):
-
         trigger = ctx.triggered_id
         #On map dropdown change, change the colors of all points to match the chosen category by the color dropdown.
         if trigger == "map_dropdown":
