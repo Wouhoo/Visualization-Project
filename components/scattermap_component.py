@@ -24,12 +24,18 @@ def render(app: Dash, data: DataFrame, id: str) -> dcc.Graph:
     @app.callback(
         Output("map", "figure"),
         Input("map_dropdown", "value"),
-        Input("bar_plot", "clickData"),
-        State("barplot_dropdown","value"),
+        Input("stacked_bar", "clickData"),
+        State("stackedbar_dropdown_x", "value"),
+        State("stackedbar_dropdown_color", "value"),
+        # Inputs for old bar plot version
+        #Input("bar_plot", "clickData"),  
+        #State("barplot_dropdown","value"),
         prevent_initial_call=True
     )
-    def change_display(color_dropdown_value, bar_clicked, bar_dropdown_value):
+    def change_display(color_dropdown_value, bar_clicked, bar_x_feature, bar_color_feature):
+    #def change_display(color_dropdown_value, bar_clicked, bar_dropdown_value):  # Definition for old bar plot
         trigger = ctx.triggered_id
+
         #On map dropdown change, change the colors of all points to match the chosen category by the color dropdown.
         if trigger == "map_dropdown":
             color = None if color_dropdown_value == [] else color_dropdown_value
@@ -42,15 +48,27 @@ def render(app: Dash, data: DataFrame, id: str) -> dcc.Graph:
 
             fig.update_layout(map=dict(style="dark"))  # Dark, Light, Satelite
             return fig
-        #On clicking the bar plot, highlight all points with the same value as the clicked bar, on the column selected by
-        #the barplot attribute dropdwon.
-        elif trigger == "bar_plot":
-            colorIndex = bar_clicked["points"][0]["curveNumber"]
-            selectedColor = PLOTLY_DEFAULT_COLORS[colorIndex % len(PLOTLY_DEFAULT_COLORS)]
-            columnValue = bar_clicked["points"][0]["x"]
-            columnName = bar_dropdown_value
-            data["highlight"] = data[columnName].apply(lambda x : "1" if x == columnValue else "0")
+        
+        #On clicking the stacked bar plot, highlight all points corresponding to the clicked bar
+        elif trigger == "stacked_bar":
+            colorIndex = bar_clicked["points"][0]["curveNumber"]  # Index of bar (default) or trace (stacked) in bar chart
+            selectedColor = PLOTLY_DEFAULT_COLORS[colorIndex % len(PLOTLY_DEFAULT_COLORS)]  # Actual selected color
+            selected_x_value = bar_clicked["points"][0]["x"] # x feature value corresponding to the selected (sub-)bar
+            #print(bar_color_feature) # TEST
+            #print(selected_x_value) # TEST
+            #print(data[bar_x_feature]) # TEST
 
+            # Default bar chart
+            if(bar_color_feature == [] or bar_color_feature == '-'):
+                data["highlight"] = data[bar_x_feature].apply(lambda x : "1" if x == selected_x_value else "0")  # Select incidents to highlight
+                
+            # Stacked bar chart
+            else:
+                colorNames = data[bar_color_feature].value_counts().index  # Unique values for barplot color feature
+                selected_color_value = colorNames[colorIndex]  # Color feature value corresponding to the selected sub-bar
+                data["highlight"] = data.apply(lambda row : "1" if (row[bar_x_feature] == selected_x_value and row[bar_color_feature] == selected_color_value) else "0", axis=1)
+
+            # Create map with highlighted data
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
                                  zoom=3,
                                  custom_data=["UID"],
@@ -60,8 +78,28 @@ def render(app: Dash, data: DataFrame, id: str) -> dcc.Graph:
             fig.update_layout(map=dict(style="dark"))
             fig.update(layout_showlegend=False)
             return fig
+
+        # Code from old bar plot (new version only uses stacked bar plot)
+        #elif trigger == "bar_plot":
+        #    colorIndex = bar_clicked["points"][0]["curveNumber"]
+        #    selectedColor = PLOTLY_DEFAULT_COLORS[colorIndex % len(PLOTLY_DEFAULT_COLORS)]
+        #    columnValue = bar_clicked["points"][0]["x"]
+        #    columnName = bar_dropdown_value
+        #    data["highlight"] = data[columnName].apply(lambda x : "1" if x == columnValue else "0")
+        
+        #    fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
+        #                         zoom=3,
+        #                         custom_data=["UID"],
+        #                         hover_data=["Present.at.time.of.bite", "Shark.behaviour","Injury.location","Diversionary.action.taken"],
+        #                         color=data["highlight"], color_discrete_map={"1": selectedColor, "0": "gray"})
+        
+        #    fig.update_layout(map=dict(style="dark"))
+        #    fig.update(layout_showlegend=False)
+        #    return fig
+
         else:
             return _render_default(data, id)
+        
     return _render_default(data, id)
 
 #Renders a default map with all points included. Nothing special

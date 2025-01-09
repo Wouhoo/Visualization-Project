@@ -63,42 +63,31 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         y_feature = 'proportion' if normalize else 'count' 
         #print(value_counts) # TEST: if you want to see what the table looks like
 
-        ### Code from Nick's barplot component for selecting & Brushing bars ###
-
-        #Sorting values (and thus frequencies) for better visualization
-        #plotted_data = {j:i for i,j in zip(values,frequencies)}
-        #sorted_plotted_data = {k: v for k, v in sorted(plotted_data.items(), key=lambda item: item[1])}
-        #values = list(sorted_plotted_data.values())
-        #frequencies = list(sorted_plotted_data.keys())
-
-        #selected_color = [str(i) for i in values]
-        #selected_sequence = PLOTLY_DEFAULT_COLORS
-
-        #If the trigger is clicking on a bar, change colors to focus on that bar.
+        # Make initial plot
         selected_sequence = PLOTLY_DEFAULT_COLORS
-        if trigger == "stacked_bar":
-            print(bar_clicked) #TEST
-            colorIndex = bar_clicked["points"][0]["curveNumber"]
-            #print("Colorindex:", colorIndex) # TEST
-            print(filtered_data[color_feature].drop_duplicates()) #TEST
-            no_colors = filtered_data[color_feature].drop_duplicates()  # Number of unique values for the color feature = number of colors used
-
-            # Default bar chart
-            if(color_feature == x_feature):
-                selected_sequence = ["#bababa"]*len(no_colors)
-                selected_sequence[colorIndex] = PLOTLY_DEFAULT_COLORS[colorIndex % len(PLOTLY_DEFAULT_COLORS)]
-            # Stacked bar chart - TODO
-            else:
-                # In this case we'd want the user to be able to select a *sub-bar* (e.g. only highlight Fatal incidents in Queensland)
-                # My first intuition to make this happen was to make the sequence s.t. only the clicked sub-bar (with the correct curve number *and* point number)
-                # has a non-gray color. But plotly goes through the same color sequence for every bar, so this won't work.
-                # It appears we *need* some way to override the color sequence for a specific (sub-)bar...
-                selected_sequence = ["#bababa"]*len(no_colors)
-                selected_sequence[colorIndex] = PLOTLY_DEFAULT_COLORS[colorIndex % len(PLOTLY_DEFAULT_COLORS)]
-
-        #fig = px.bar(filtered_data, x= values, y = frequencies, color=selected_color,color_discrete_sequence=selected_sequence)
-        # Make the plot
         fig = px.bar(value_counts, x=x_feature, y=y_feature, color=color_feature, color_discrete_sequence=selected_sequence)
+
+        # If the user clicks a bar, grey out all other bars
+        if trigger == "stacked_bar":
+            #print(bar_clicked) #TEST
+            curveNumber = bar_clicked["points"][0]["curveNumber"]
+            pointNumber = bar_clicked["points"][0]["pointNumber"]
+            x = bar_clicked["points"][0]["x"]
+            #selected_color = PLOTLY_DEFAULT_COLORS[curveNumber % len(PLOTLY_DEFAULT_COLORS)]  # TEST
+
+            # Regular bar chart
+            if(color_feature == x_feature):
+                # In this case a "trace" is one bar
+                fig.for_each_trace(lambda trace: trace.update(marker_color = '#bababa') if trace.x != x else ()) # Set all unselected traces to grey
+            
+            # Stacked bar chart
+            else:
+                # In this case a trace consists of all sub-bars of the same type (i.e. all "injured" sub-bars)
+                trace_names = value_counts[color_feature].drop_duplicates()  # Trace names are the unique values of the color feature
+                fig.for_each_trace(lambda trace: trace.update(marker_color = '#bababa') if trace.name != trace_names[curveNumber] else ())  # Set all unselected *traces* to grey
+                #fig.for_each_trace(lambda trace: print(trace.x)) # TEST
+                fig.update_traces(selectedpoints = [pointNumber])  # Selects the full bar that was clicked (i.e. selects all sub-bars with the same pointNumber)
+                fig.update_traces(unselected_marker_color = '#BABABA')  # Sets all unselected *bars* to grey
 
         return fig
     

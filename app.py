@@ -24,11 +24,11 @@ def create_layout(app: Dash) -> html.Div:
                 className = "left-col",
                 children=[
                     # Barplot
-                    html.Div(
-                        className = "bar_plot",
-                        children=[
-                            barplot_component.render(app, id="bar_plot", data=df),
-                        ]),
+                    #html.Div(
+                    #    className = "bar_plot",
+                    #    children=[
+                    #        barplot_component.render(app, id="bar_plot", data=df),
+                    #    ]),
                     # Stacked barplot
                     html.Div(
                         className = "stacked_bar",
@@ -51,8 +51,8 @@ def create_layout(app: Dash) -> html.Div:
                     html.Div(
                         className = "drop_down",
                         children=[
-                            dropdown_component.render(app, id="barplot_dropdown", name="Barplot Attribute", 
-                                        values={col.replace(".", " "): col for col in plotable_columns}),
+                            #dropdown_component.render(app, id="barplot_dropdown", name="Barplot Attribute", 
+                            #            values={col.replace(".", " "): col for col in plotable_columns}),
                             dropdown_component.render(app, id="stackedbar_dropdown_x", name="Stacked bar x Attribute", 
                                         values={col.replace(".", " "): col for col in plotable_columns}),
                             dropdown_component.render(app, id="stackedbar_dropdown_color", name="Stacked bar color Attribute", 
