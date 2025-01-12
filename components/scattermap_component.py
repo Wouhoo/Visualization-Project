@@ -68,22 +68,26 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
             #print(data[bar_x_feature]) # TEST
 
             # Default bar chart
-            if(bar_color_feature == [] or bar_color_feature == '-'):
-                data["highlight"] = data[bar_x_feature].apply(lambda x : "1" if x == selected_x_value else "0")  # Select incidents to highlight
+            #if(bar_color_feature == [] or bar_color_feature == '-'):
+            #    data["highlight"] = data[bar_x_feature].apply(lambda x : "1" if x == selected_x_value else "0")  # Select incidents to highlight
                 
             # Stacked bar chart
-            else:
-                colorNames = data[bar_color_feature].value_counts().index  # Unique values for barplot color feature
-                selected_color_value = colorNames[colorIndex]  # Color feature value corresponding to the selected sub-bar
-                data["highlight"] = data.apply(lambda row : "1" if (row[bar_x_feature] == selected_x_value and row[bar_color_feature] == selected_color_value) else "0", axis=1)
+            #else:
+            #    colorNames = data[bar_color_feature].value_counts().index  # Unique values for barplot color feature
+            #    selected_color_value = colorNames[colorIndex]  # Color feature value corresponding to the selected sub-bar
+            #    data["highlight"] = data.apply(lambda row : "1" if (row[bar_x_feature] == selected_x_value and row[bar_color_feature] == selected_color_value) else "0", axis=1)
 
             # Create map with highlighted data
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
                                  zoom=3,
                                  custom_data=["UID"],
                                  hover_data=["Present.at.time.of.bite", "Shark.behaviour","Injury.location","Diversionary.action.taken"],
-                                 color=data["highlight"], color_discrete_map={"1": selectedColor, "0": "gray"})
+                                 color=data["highlighted"], color_discrete_map={True: selectedColor, False: "gray"})
 
+            print(data.loc[data['selected'] == True])  # TEST
+            print([int(id) for id in data.loc[data['selected'] == True].index])  # TEST
+            fig.update_traces(selectedpoints = [int(id) for id in data.loc[data['selected'] == True].index])
+            fig.update_traces(unselected_marker_opacity=0)  # TEST: make unselected points invisible
             #fig.update_traces(selectedpoints=[point['pointNumber'] for point in selected_data["points"]])  # If an area was selected, preserve the selection
             #fig.update_traces(selectedpoints=[0,34,60,78,91]) # This works, so the above should also work in principle
             # The problem appears to be in giving the map component *its own* selected data as a callback input...
