@@ -22,36 +22,31 @@ PLOTLY_DEFAULT_COLORS = ['#636EFA','#EF553B','#00CC96','#AB63FA','#FFA15A','#19D
                         '#B6E880','#FF97FF','#FECB52']
 
 # Actual render function
-def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
+def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
     @app.callback(
         Output("stacked_bar", "figure"),
-        [Input("map", "selectedData"),
+        [Input("data_store", "data"),
          Input("stackedbar_dropdown_x", "value"),
          Input("stackedbar_dropdown_color", "value"),
          Input("stackedbar_normalize_checkbox", "value"),
          Input("stacked_bar", "clickData")]
     )
-    def update_figure(selected_data, x_feature, color_feature, normalize, bar_clicked):
+    def update_figure(data, x_feature, color_feature, normalize, bar_clicked):
+        # Read in data
+        if data is None:
+            data = all_data
+        filtered_data = DataFrame(data)  # Convert JSON data to pandas dataframe
+        filtered_data = filtered_data.loc[filtered_data['selected'] == 1]  # Use only points selected on the map
+        if(len(filtered_data) == 0):
+            return px.bar(None)
+
         trigger = ctx.triggered_id
-        select_all_points = False
 
         if x_feature == [] or x_feature == "-":
             return px.bar(None)
         else:
             if color_feature == [] or color_feature == "-": # Effectively this uses the default bar chart if no color attribute is selected
                 color_feature = x_feature
-            if selected_data is None:
-                select_all_points = True
-
-        # Filter data based on map selection
-        ids = []
-        if not select_all_points:
-            for point in selected_data["points"]:
-                ids.append(point["customdata"][0])
-        filtered_data = data.loc[data["UID"].isin(ids)] if select_all_points == False else data
-
-        if len(filtered_data) == 0:
-            return px.bar(None)
         
         # Group low-frequency values into "other" category to prevent clutter
         for feature in [x_feature, color_feature]:

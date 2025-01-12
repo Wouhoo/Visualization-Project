@@ -2,7 +2,7 @@ import pandas as pd
 from dash import Dash, html, dcc, Input, Output
 from dash_bootstrap_components.themes import BOOTSTRAP
 
-from components import dropdown_component, scattermap_component, barplot_component, scatterplot_component, parcat_component, stackedbar_component, checklist_component
+from components import dropdown_component, scattermap_component, barplot_component, scatterplot_component, parcat_component, stackedbar_component, checklist_component, data_cleaning
 
 app = Dash(external_stylesheets=[BOOTSTRAP])
 
@@ -23,6 +23,12 @@ def create_layout(app: Dash) -> html.Div:
             html.Div( 
                 className = "left-col",
                 children=[
+                    # Data storage
+                    html.Div(
+                        className="data_store",
+                        children=[
+                            data_cleaning.store(app, id="data_store", all_data=df)
+                        ]),
                     # Barplot
                     #html.Div(
                     #    className = "bar_plot",
@@ -33,7 +39,7 @@ def create_layout(app: Dash) -> html.Div:
                     html.Div(
                         className = "stacked_bar",
                         children=[
-                            stackedbar_component.render(app, id="stacked_bar", data=df),
+                            stackedbar_component.render(app, id="stacked_bar", all_data=df),
                         ]),
                     # Parallel categories plot
                     #html.Div(
@@ -73,7 +79,7 @@ def create_layout(app: Dash) -> html.Div:
             html.Div(
                 className = "right-col",
                 children=[ 
-                    scattermap_component.render(app, data=df, id="map")
+                    scattermap_component.render(app, all_data=df, id="map")
             ]),
         ]
     )
