@@ -20,7 +20,6 @@ String id - A unique ID not used by any other component in our app
 @Returns: A Dcc.Graph of a scatter map
 """
 def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
-
     @app.callback(
         Output("map", "figure"),
         Input("data_store", "data"), # Wouldn't work as an Input fsr. We'll see if that causes issues.
@@ -47,9 +46,6 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
                                  color=color, color_discrete_sequence=colorSeq)
 
             fig.update_layout(map=dict(style="dark"))  # Dark, Light, Satelite
-            #print("MAP DROPDOWN TRACES") # TEST
-            #fig.for_each_trace(lambda trace: print(trace.name)) # TEST
-            # As expected, traces are named after the map dropdown attribute values (i.e. injured, fatal, uninjured)
             return fig
         else:
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name", width=1000, height=700,

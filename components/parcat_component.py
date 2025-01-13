@@ -19,27 +19,35 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
     @app.callback(
         Output("parcat", "figure"),
         [Input("data_store", "data"),
-        #Input("map", "selectedData"),
-         Input("parcat_dropdown", "value")]
+         Input("parcat_dropdown", "value"),
+         Input("stackedbar_dropdown_x", "value")]
     )
-    def update_figure(selected_data, selected_features):
+    def update_figure(selected_data, selected_features, barplot_x_feature):
         # Read data from data storage
         if selected_data is None:
             selected_data = data
         selected_data = DataFrame(selected_data)
-        filtered_data = selected_data.loc[selected_data['selected']]  # Only consider selected points
+        filtered_data = selected_data.loc[selected_data['selected'] == 1]  # Only consider selected points
 
         # Return empty plot if no features are selected
         if selected_features is None or len(selected_features) == 0:
             return px.parallel_categories(dimensions=[])
         
         # Group low-frequency values into "other" category to prevent clutter
+        # THIS SHOULD BE MOVED TO DATA_CLEANING
         for feature in selected_features:
             filtered_data = filter_low_freq(filtered_data, feature)
 
-        # Make parallel categories plot
-        fig = px.parallel_categories(filtered_data,
-                                     dimensions=selected_features)
+        # Make PCP with color according to selected dropdown values
+        print("BARPLOT FEATURE: ", barplot_x_feature)
+        print("DATA COLUMNS: ", filtered_data.columns)
+        #if barplot_x_feature in selected_features:
+        #    fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=barplot_x_feature)
+        #else:
+        #    fig = px.parallel_categories(filtered_data, dimensions=selected_features)
+        fig = px.parallel_categories(filtered_data, dimensions=selected_features)
+
+
         return fig
     
     return dcc.Graph(id = id)

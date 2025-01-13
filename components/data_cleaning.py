@@ -27,14 +27,16 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
         filtered_data = all_data
 
         # Filter based on map selection
+        # Note: "selected" is the opacity value the point should have on the map (1 if selected, 0.05 if not)
         if(map_selected_data is None):
             filtered_data['selected'] = [1]*len(all_data)  # In this case all data is selected
         else:
             selected_ids = [point['pointNumber'] for point in map_selected_data['points']]  # Row numbers of selected points
-            filtered_data['selected'] = [0]*len(all_data)
+            filtered_data['selected'] = [0.05]*len(all_data)
             filtered_data['selected'].loc[selected_ids] = 1  # Now set selected to 1 only for selected points
 
         # Highlight based on clicked bar in barplot
+        # Note: "highlighted" is the color the point should have in all plots (colored if highlighted, grey (#bababa) otherwise)
         if(bar_clicked is None):
             filtered_data['highlighted'] = ["#bababa"]*len(all_data)  # In this case, highlight all data
         else:
@@ -53,8 +55,7 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
                 filtered_data["highlighted"] = filtered_data.apply(lambda row : selected_color if (row[bar_x_feature] == selected_x_value and row[bar_color_feature] == selected_color_value) else "#bababa", axis=1)
 
         # Return data with correct filtering/highlighting
-        return filtered_data.to_dict()  # Note: data is stored as JSON, so it has to be converted to JSON
-                               # and then converted back when reading it in another component
+        return filtered_data.to_dict()  # Note: data is stored as JSON, so it has to be converted to JSON and then converted back when reading it in another component
 
     return dcc.Store(id=id)
 

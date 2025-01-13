@@ -36,7 +36,7 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
         if data is None:
             data = all_data
         filtered_data = DataFrame(data)  # Convert JSON data to pandas dataframe
-        filtered_data = filtered_data.loc[filtered_data['selected'] == True]  # Use only points selected on the map
+        filtered_data = filtered_data.loc[filtered_data['selected'] == 1]  # Use only points selected on the map
         if(len(filtered_data) == 0):
             return px.bar(None)
 
