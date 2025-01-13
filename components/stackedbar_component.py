@@ -48,10 +48,6 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
             if color_feature == [] or color_feature == "-": # Effectively this uses the default bar chart if no color attribute is selected
                 color_feature = x_feature
         
-        # Group low-frequency values into "other" category to prevent clutter
-        for feature in [x_feature, color_feature]:
-            filtered_data = filter_low_freq(filtered_data, feature)
-        
         # Calculate number of incidents for each unique x value
         # Returns a df with 3 columns: x_feature, color_feature, and the number of incidents for that (x_feature, color_feature) combination
         value_counts = pd.DataFrame(filtered_data.groupby([x_feature])[color_feature].value_counts(normalize=normalize)).reset_index()
@@ -64,11 +60,9 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
 
         # If the user clicks a bar, grey out all other bars
         if trigger == "stacked_bar":
-            #print(bar_clicked) #TEST
             curveNumber = bar_clicked["points"][0]["curveNumber"]
             pointNumber = bar_clicked["points"][0]["pointNumber"]
             x = bar_clicked["points"][0]["x"]
-            #selected_color = PLOTLY_DEFAULT_COLORS[curveNumber % len(PLOTLY_DEFAULT_COLORS)]  # TEST
 
             # Regular bar chart
             if(color_feature == x_feature):

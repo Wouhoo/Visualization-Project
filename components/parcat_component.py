@@ -32,11 +32,6 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         # Return empty plot if no features are selected
         if selected_features is None or len(selected_features) == 0:
             return px.parallel_categories(dimensions=[])
-        
-        # Group low-frequency values into "other" category to prevent clutter
-        # THIS SHOULD BE MOVED TO DATA_CLEANING
-        for feature in selected_features:
-            filtered_data = filter_low_freq(filtered_data, feature)
 
         # Make PCP with color according to selected dropdown values
         print("BARPLOT FEATURE: ", barplot_x_feature)
@@ -46,7 +41,6 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         #else:
         #    fig = px.parallel_categories(filtered_data, dimensions=selected_features)
         fig = px.parallel_categories(filtered_data, dimensions=selected_features)
-
 
         return fig
     
