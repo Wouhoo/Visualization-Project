@@ -28,33 +28,29 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
 
         # Filter based on map selection
         if(map_selected_data is None):
-            filtered_data['selected'] = [True]*len(all_data)  # In this case all data is selected
+            filtered_data['selected'] = [1]*len(all_data)  # In this case all data is selected
         else:
             selected_ids = [point['pointNumber'] for point in map_selected_data['points']]  # Row numbers of selected points
-            filtered_data['selected'] = [False]*len(all_data)  
-            filtered_data['selected'].loc[selected_ids] = True  # Now set selected to 1 only for selected points
-            print(filtered_data.loc[filtered_data['selected'] == True]) # TEST
+            filtered_data['selected'] = [0]*len(all_data)
+            filtered_data['selected'].loc[selected_ids] = 1  # Now set selected to 1 only for selected points
 
         # Highlight based on clicked bar in barplot
         if(bar_clicked is None):
-            filtered_data['highlighted'] = [True]*len(all_data)  # In this case, highlight all data
+            filtered_data['highlighted'] = ["#bababa"]*len(all_data)  # In this case, highlight all data
         else:
             color_index = bar_clicked["points"][0]["curveNumber"]  # Index of bar (default) or trace (stacked) in bar chart
             selected_color = PLOTLY_DEFAULT_COLORS[color_index % len(PLOTLY_DEFAULT_COLORS)]  # Actual selected color
             selected_x_value = bar_clicked["points"][0]["x"] # x feature value corresponding to the selected (sub-)bar
-            #print(bar_color_feature) # TEST
-            #print(selected_x_value) # TEST
-            #print(data[bar_x_feature]) # TEST
 
             # Default bar chart
             if(bar_color_feature == [] or bar_color_feature == '-'):
-                filtered_data["highlighted"] = filtered_data[bar_x_feature].apply(lambda x : True if x == selected_x_value else False)  # Select incidents to highlight
-                
+                filtered_data["highlighted"] = filtered_data[bar_x_feature].apply(lambda x : selected_color if x == selected_x_value else "#bababa")  # Select incidents to highlight
+
             # Stacked bar chart
             else:
                 color_names = filtered_data[bar_color_feature].value_counts().index  # Unique values for barplot color feature
                 selected_color_value = color_names[color_index]  # Color feature value corresponding to the selected sub-bar
-                filtered_data["highlighted"] = filtered_data.apply(lambda row : True if (row[bar_x_feature] == selected_x_value and row[bar_color_feature] == selected_color_value) else False, axis=1)
+                filtered_data["highlighted"] = filtered_data.apply(lambda row : selected_color if (row[bar_x_feature] == selected_x_value and row[bar_color_feature] == selected_color_value) else "#bababa", axis=1)
 
         # Return data with correct filtering/highlighting
         return filtered_data.to_dict()  # Note: data is stored as JSON, so it has to be converted to JSON
