@@ -18,37 +18,28 @@ app = Dash(__name__)
 def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
     @app.callback(
         Output("parcat", "figure"),
-        [Input("map", "selectedData")]#,
-         #Input("scatterplot_dropdown_x", "value"),
-         #Input("scatterplot_dropdown_y", "value")]
+        [Input("data_store", "data"),
+        #Input("map", "selectedData"),
+         Input("parcat_dropdown", "value")]
     )
-    def update_figure(selected_data): #, x_feature, y_feature
-        select_all_points = False
-
-        # Empty PC plot if no features are provided
+    def update_figure(selected_data, selected_features):
+        # Read data from data storage
         if selected_data is None:
-            select_all_points = True
+            selected_data = data
+        selected_data = DataFrame(selected_data)
+        filtered_data = selected_data.loc[selected_data['selected']]  # Only consider selected points
 
-        # Filter data based on selection in map
-        ids = []
-        if not select_all_points:
-            for point in selected_data["points"]:
-                ids.append(point["customdata"][0])
-        filtered_data = data.copy().loc[data["UID"].isin(ids)] if select_all_points == False else data.copy()
-
-        # Which columns to show (currently hardcoded, should be selectable)
-        dimensions = ['Shark.name', 'Site.category', 'Victim.injury']
-
-        if len(filtered_data) == 0:
-            return px.parallel_categories(None)
+        # Return empty plot if no features are selected
+        if selected_features is None or len(selected_features) == 0:
+            return px.parallel_categories(dimensions=[])
         
         # Group low-frequency values into "other" category to prevent clutter
-        for feature in dimensions:
+        for feature in selected_features:
             filtered_data = filter_low_freq(filtered_data, feature)
 
         # Make parallel categories plot
         fig = px.parallel_categories(filtered_data,
-                                     dimensions=dimensions)
+                                     dimensions=selected_features)
         return fig
     
     return dcc.Graph(id = id)

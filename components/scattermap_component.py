@@ -45,10 +45,13 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
                                  zoom=3,
                                  custom_data=["UID"],
-                                 hover_data=["Present.at.time.of.bite", "Shark.behaviour","Injury.location","Diversionary.action.taken"],
+                                 hover_data=["UID","Present.at.time.of.bite", "Shark.behaviour","Victim.injury","Injury.location","Diversionary.action.taken"],
                                  color=color, color_discrete_sequence=colorSeq)
 
             fig.update_layout(map=dict(style="dark"))  # Dark, Light, Satelite
+            #print("MAP DROPDOWN TRACES") # TEST
+            #fig.for_each_trace(lambda trace: print(trace.name)) # TEST
+            # As expected, traces are named after the map dropdown attribute values (i.e. injured, fatal, uninjured)
             return fig
         
         #On clicking the stacked bar plot, highlight all points corresponding to the clicked bar
@@ -60,20 +63,23 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
             # Create map with highlighted data
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
                                  zoom=3,
-                                 #custom_data=["UID"],
-                                 hover_data=["Present.at.time.of.bite", "Shark.behaviour","Injury.location","Diversionary.action.taken"],
-                                 color=data["highlighted"], color_discrete_map={True: selectedColor, False: "gray"})
+                                 custom_data=["UID"],
+                                 hover_data=["UID","Present.at.time.of.bite", "Shark.behaviour","Victim.injury","Injury.location","Diversionary.action.taken"],
+                                 color=data['highlighted'], color_discrete_map={True: selectedColor, False: "gray"})
 
             # Restore selection
             print(data.loc[data['selected'] == True])  # TEST
             print([int(id) for id in data.loc[data['selected'] == True].index])  # TEST
-            fig.update_traces(selectedpoints = [int(id) for id in data.loc[data['selected'] == True].index])
-            fig.update_traces(unselected_marker_opacity=0)  # TEST: make unselected points invisible
+            fig.for_each_trace(lambda trace: print(trace.name, trace.lat)) # TEST
+            #fig.update_traces(selectedpoints = [int(id) for id in data.loc[data['selected'] == True].index])
+            #fig.update_traces(unselected_marker_opacity=0)  # TEST: make unselected points invisible
             #fig.update_traces(selectedpoints=[0,34,60,78,91]) # This works, so the above should also work in principle
             # For some reason though, it seems to change the selection based on what bar you clicked?
 
             fig.update_layout(map=dict(style="dark"))
             fig.update(layout_showlegend=False)
+            print("STACKED BAR TRACES") # TEST
+            fig.for_each_trace(lambda trace: print(trace.name, trace.lat)) # TEST
             return fig
 
         else:
@@ -85,7 +91,7 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
 def _render_default(data: DataFrame, id: str) -> dcc.Graph:
     fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name", width=1000, height=700, zoom=3,
                          custom_data=["UID"],
-                         hover_data=["Victim.activity", "Victim.gender", "Site.category", "Victim.injury"],
+                         hover_data=["UID","Present.at.time.of.bite", "Shark.behaviour","Victim.injury","Injury.location","Diversionary.action.taken"],
                          color=None)
     fig.update_layout(map=dict(style="dark"))  # Dark, Light, Satelite
     return dcc.Graph(figure=fig, id=id)
