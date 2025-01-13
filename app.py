@@ -8,7 +8,6 @@ app = Dash(external_stylesheets=[BOOTSTRAP])
 
 # Read in data
 df = pd.read_excel('sharks_clean.xlsx')
-#print(df.dtypes) # TEST
 
 # Options for dropdowns
 plotable_columns = ["Incident.month", "Victim.injury", "State", "Site.category", "Provoked/unprovoked",
@@ -29,7 +28,7 @@ def create_layout(app: Dash) -> html.Div:
                         children=[
                             data_cleaning.store(app, id="data_store", all_data=df)
                         ]),
-                    # Barplot
+                    # Old barplot
                     #html.Div(
                     #    className = "bar_plot",
                     #    children=[
@@ -47,18 +46,12 @@ def create_layout(app: Dash) -> html.Div:
                         children=[
                             parcat_component.render(app, id="parcat", data=df),
                         ]),
-                    # Scatterplot
-                    #html.Div(
-                    #   className = "parcat",
-                    #    children=[
-                    #        scatterplot_component.render(app, id="scatterplot", data=df),
-                    #    ]),
                     # Dropdowns
                     html.Div(
                         className = "drop_down",
                         children=[
                             #dropdown_component.render(app, id="barplot_dropdown", name="Barplot Attribute", 
-                            #            values={col.replace(".", " "): col for col in plotable_columns}),
+                            #            values={col.replace(".", " "): col for col in plotable_columns}), # Old barplot dropdown
                             dropdown_component.render(app, id="stackedbar_dropdown_x", name="Stacked bar x Attribute", 
                                         values={col.replace(".", " "): col for col in plotable_columns}),
                             dropdown_component.render(app, id="stackedbar_dropdown_color", name="Stacked bar color Attribute", 

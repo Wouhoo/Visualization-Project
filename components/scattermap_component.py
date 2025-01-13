@@ -22,7 +22,7 @@ String id - A unique ID not used by any other component in our app
 def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
     @app.callback(
         Output("map", "figure"),
-        Input("data_store", "data"), # Wouldn't work as an Input fsr. We'll see if that causes issues.
+        Input("data_store", "data"),
         Input("map_dropdown", "value"),
         State("stackedbar_dropdown_x", "value"),
         State("stackedbar_dropdown_color", "value"),
@@ -35,7 +35,7 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
             data = all_data
         data = DataFrame(data)  # Convert stored JSON to dataframe
 
-        #On map dropdown change, change the colors of all points to match the chosen category by the color dropdown.
+        # On map dropdown change, change the colors of all points to match the chosen category by the color dropdown.
         if trigger == "map_dropdown":
             color = None if color_dropdown_value == [] else color_dropdown_value
             colorSeq = None if color_dropdown_value == [] or color_dropdown_value not in PREDEFINED_COLORS.keys() else PREDEFINED_COLORS[color_dropdown_value]
@@ -47,6 +47,7 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
 
             fig.update_layout(map=dict(style="dark"))  # Dark, Light, Satelite
             return fig
+        # If a bar is clicked in the barplot, change color based on the highlighted bar and opacity based on map area selection
         else:
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name", width=1000, height=700,
                                  zoom=3,
