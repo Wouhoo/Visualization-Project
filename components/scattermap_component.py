@@ -25,17 +25,11 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
         Output("map", "figure"),
         Input("data_store", "data"), # Wouldn't work as an Input fsr. We'll see if that causes issues.
         Input("map_dropdown", "value"),
-        #Input("map", "selectedData"),
-        #Input("stacked_bar", "selectedData"),
         State("stackedbar_dropdown_x", "value"),
         State("stackedbar_dropdown_color", "value"),
-        # Inputs for old bar plot version
-        #Input("bar_plot", "clickData"),  
-        #State("barplot_dropdown","value"),
         prevent_initial_call=True
     )
     def change_display(data, color_dropdown_value, bar_x_feature, bar_color_feature):
-    #def change_display(color_dropdown_value, bar_clicked, bar_dropdown_value):  # Definition for old bar plot
         trigger = ctx.triggered_id
         # Read data
         if data is None:
@@ -49,10 +43,13 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
                                  zoom=3,
                                  custom_data=["UID"],
-                                 hover_data=["Present.at.time.of.bite", "Shark.behaviour","Injury.location","Diversionary.action.taken"],
+                                 hover_data=["UID","Present.at.time.of.bite", "Shark.behaviour","Victim.injury","Injury.location","Diversionary.action.taken"],
                                  color=color, color_discrete_sequence=colorSeq)
 
             fig.update_layout(map=dict(style="dark"))  # Dark, Light, Satelite
+            #print("MAP DROPDOWN TRACES") # TEST
+            #fig.for_each_trace(lambda trace: print(trace.name)) # TEST
+            # As expected, traces are named after the map dropdown attribute values (i.e. injured, fatal, uninjured)
             return fig
         else:
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name", width=1000, height=700,
@@ -63,6 +60,7 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
             fig.update_layout(map=dict(style="dark"))  # Dark, Light, Satelite
             fig.update_traces(marker=dict(color=data['highlighted'], opacity=data['selected']))
             return fig
+
         
     return _render_default(all_data, id)
 
@@ -70,7 +68,7 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
 def _render_default(data: DataFrame, id: str) -> dcc.Graph:
     fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name", width=1000, height=700, zoom=3,
                          custom_data=["UID"],
-                         hover_data=["Victim.activity", "Victim.gender", "Site.category", "Victim.injury"],
+                         hover_data=["UID","Present.at.time.of.bite", "Shark.behaviour","Victim.injury","Injury.location","Diversionary.action.taken"],
                          color=None)
     fig.update_layout(map=dict(style="dark"))  # Dark, Light, Satelite
     return dcc.Graph(figure=fig, id=id)

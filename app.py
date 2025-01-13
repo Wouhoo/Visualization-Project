@@ -42,11 +42,11 @@ def create_layout(app: Dash) -> html.Div:
                             stackedbar_component.render(app, id="stacked_bar", all_data=df),
                         ]),
                     # Parallel categories plot
-                    #html.Div(
-                    #    className = "parcat",
-                    #    children=[
-                    #        parcat_component.render(app, id="parcat", data=df),
-                    #    ]),
+                    html.Div(
+                        className = "parcat",
+                        children=[
+                            parcat_component.render(app, id="parcat", data=df),
+                        ]),
                     # Scatterplot
                     #html.Div(
                     #   className = "parcat",
@@ -63,6 +63,8 @@ def create_layout(app: Dash) -> html.Div:
                                         values={col.replace(".", " "): col for col in plotable_columns}),
                             dropdown_component.render(app, id="stackedbar_dropdown_color", name="Stacked bar color Attribute", 
                                         values={col.replace(".", " "): col for col in plotable_columns}),
+                            dropdown_component.render(app, id="parcat_dropdown", name="Parallel categories attributes", 
+                                        values={col.replace(".", " "): col for col in plotable_columns}, is_multiple_choice=True),         
                             dropdown_component.render(app, id="map_dropdown", name="Map Attribute", 
                                                         values={col.replace(".", " "): col for col in
                                                                 plotable_columns + gradient_columns})
