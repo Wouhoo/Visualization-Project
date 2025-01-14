@@ -24,16 +24,19 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
         Output("data_store", "data"),
         [Input("map", "selectedData"),
          Input("stacked_bar", "clickData"),
+         Input("slider", "value"),
          State("stackedbar_dropdown_x", "value"),
          State("stackedbar_dropdown_color", "value")]
     )
-    def filter_dataframe(map_selected_data, bar_clicked, bar_x_feature, bar_color_feature):
-        filtered_data = all_data.copy()
+    def filter_dataframe(map_selected_data, bar_clicked, input_year, bar_x_feature, bar_color_feature):
+        # filtered_data = all_data.copy()
+        timedata = all_data.loc[(all_data['Incident.year'] >= input_year[0]) & (all_data['Incident.year'] <= input_year[1])]
+        filtered_data = timedata
 
         # Filter based on map selection
         # Note: "selected" is the opacity value the point should have on the map (1 if selected, 0.05 if not)
         if(map_selected_data is None):
-            filtered_data['selected'] = [1]*len(all_data)  # In this case all data is selected
+            filtered_data['selected'] = [1]*len(timedata)  # In this case all data is selected
         else:
             selected_ids = [point['pointNumber'] for point in map_selected_data['points']]  # Row numbers of selected points
             filtered_data['selected'] = [0.05]*len(all_data)
@@ -47,7 +50,7 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
         # Highlight based on clicked bar in barplot
         # Note: "highlighted" is the color the point should have in all plots (colored if highlighted, grey (#bababa) otherwise)
         if(bar_clicked is None):
-            filtered_data['highlighted'] = ["#bababa"]*len(all_data)  # In this case, highlight all data
+            filtered_data['highlighted'] = ["#bababa"]*len(timedata)  # In this case, highlight all data
         else:
             color_index = bar_clicked["points"][0]["curveNumber"]  # Index of bar (default) or trace (stacked) in bar chart
             selected_color = PLOTLY_DEFAULT_COLORS[color_index % len(PLOTLY_DEFAULT_COLORS)]  # Actual selected color

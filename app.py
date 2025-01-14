@@ -2,7 +2,7 @@ import pandas as pd
 from dash import Dash, html, dcc, Input, Output
 from dash_bootstrap_components.themes import BOOTSTRAP
 
-from components import dropdown_component, scattermap_component, barplot_component, scatterplot_component, parcat_component, stackedbar_component, checklist_component, data_cleaning
+from components import dropdown_component, scattermap_component, barplot_component, scatterplot_component, parcat_component, stackedbar_component, checklist_component, data_cleaning, timeline_component
 
 app = Dash(external_stylesheets=[BOOTSTRAP])
 
@@ -68,7 +68,15 @@ def create_layout(app: Dash) -> html.Div:
                         children=[
                             checklist_component.render(app, id="stackedbar_normalize_checkbox", values=["Normalize stacked bar chart?"])
                         ]
-                    )
+                    ),
+                      html.Div(
+                        className = "TimeLine",
+                        children = [
+                            timeline_component.render(app, data=df, id = "timeline",)
+                        ]
+                    ),
+
+
             ]),
             # Main map
             html.Div(
