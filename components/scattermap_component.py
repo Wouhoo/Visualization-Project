@@ -23,41 +23,45 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
     @app.callback(
         Output("map", "figure"),
         Input("data_store", "data"),
-        Input("map_dropdown", "value"),
-        State("stackedbar_dropdown_x", "value"),
-        State("stackedbar_dropdown_color", "value"),
+        Input("primary_color_dropdown", "value"),
         prevent_initial_call=True
     )
-    def change_display(data, color_dropdown_value, bar_x_feature, bar_color_feature):
-        trigger = ctx.triggered_id
+    def change_display(data, primary_color_feature):
         # Read data
         if data is None:
             data = all_data
         data = DataFrame(data)  # Convert stored JSON to dataframe
 
-        # On map dropdown change, change the colors of all points to match the chosen category by the color dropdown.
-        if trigger == "map_dropdown":
-            color = None if color_dropdown_value == [] else color_dropdown_value
-            colorSeq = None if color_dropdown_value == [] or color_dropdown_value not in PREDEFINED_COLORS.keys() else PREDEFINED_COLORS[color_dropdown_value]
-            fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
-                                 zoom=3,
-                                 custom_data=["UID"],
-                                 hover_data=["UID","Present.at.time.of.bite", "Shark.behaviour","Victim.injury","Injury.location","Diversionary.action.taken"],
-                                 color=color, color_discrete_sequence=colorSeq)
-
-            fig.update_layout(map=dict(style="dark"))  # Dark, Light, Satelite
-            return fig
-        # If a bar is clicked in the barplot, change color based on the highlighted bar and opacity based on map area selection
-        else:
+        # If a bar is clicked in the barplot or PCP, change color based on the highlighted bar
+        if any([color != '#bababa' for color in data['highlighted']]):
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name", width=1000, height=700,
                                  zoom=3,
                                  custom_data=["UID"],
                                  hover_data=["Victim.activity", "Victim.gender", "Site.category", "Victim.injury"]
                                  )
-            fig.update_layout(map=dict(style="dark"))  # Dark, Light, Satelite
-            fig.update_traces(marker=dict(color=data['highlighted'], opacity=data['selected']))
-            return fig
+            fig.update_traces(marker_color=data['highlighted'])
 
+        # Otherwise, change color based on primary color attribute if one is selected
+        elif primary_color_feature != []:
+            fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
+                        zoom=3,
+                        custom_data=["UID"],
+                        hover_data=["UID","Present.at.time.of.bite", "Shark.behaviour","Victim.injury","Injury.location","Diversionary.action.taken"],
+                        color=primary_color_feature)
+
+        # If no primary color attribute is selected, grey out all points
+        else:
+            colorSeq = ['#bababa']
+            fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
+                                 zoom=3,
+                                 custom_data=["UID"],
+                                 hover_data=["UID","Present.at.time.of.bite", "Shark.behaviour","Victim.injury","Injury.location","Diversionary.action.taken"],
+                                 color=None, color_discrete_sequence=colorSeq)
+        
+        # Set map to dark mode, make unselected points transparent & return figure
+        fig.update_layout(map_style="dark")  # Dark, Light, Satelite
+        fig.update_traces(marker_opacity=data['selected'])
+        return fig
         
     return _render_default(all_data, id)
 

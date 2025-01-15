@@ -11,7 +11,7 @@ df = pd.read_excel('sharks_clean.xlsx')
 
 # Options for dropdowns
 plotable_columns = ["Incident.month", "Victim.injury", "State", "Site.category", "Provoked/unprovoked",
-                     "Victim.activity", "Injury.severity", "Victim.gender", "Data.source", "-"]
+                     "Victim.activity", "Injury.severity", "Victim.gender", "Data.source", "Shark.name"]
 gradient_columns = ["Incident.month", "Incident.year", "Shark.length.m", "Victim.age", "Time.of.incident"]
 
 # Create actual layout
@@ -52,15 +52,15 @@ def create_layout(app: Dash) -> html.Div:
                         children=[
                             #dropdown_component.render(app, id="barplot_dropdown", name="Barplot Attribute", 
                             #            values={col.replace(".", " "): col for col in plotable_columns}), # Old barplot dropdown
-                            dropdown_component.render(app, id="stackedbar_dropdown_x", name="Stacked bar x Attribute", 
+                            dropdown_component.render(app, id="primary_color_dropdown", name="Primary color attribute", 
                                         values={col.replace(".", " "): col for col in plotable_columns}),
-                            dropdown_component.render(app, id="stackedbar_dropdown_color", name="Stacked bar color Attribute", 
+                            dropdown_component.render(app, id="secondary_color_dropdown", name="Barplot: Secondary color attribute", 
                                         values={col.replace(".", " "): col for col in plotable_columns}),
                             dropdown_component.render(app, id="parcat_dropdown", name="Parallel categories attributes", 
                                         values={col.replace(".", " "): col for col in plotable_columns}, is_multiple_choice=True),         
-                            dropdown_component.render(app, id="map_dropdown", name="Map Attribute", 
-                                                        values={col.replace(".", " "): col for col in
-                                                                plotable_columns + gradient_columns})
+                            #dropdown_component.render(app, id="map_dropdown", name="Map Attribute", 
+                            #                            values={col.replace(".", " "): col for col in
+                            #                                    plotable_columns + gradient_columns}) # Old map dropdown
                         ]),
                     # Checklists
                     html.Div(

@@ -24,9 +24,9 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         Output("parcat", "figure"),
         [Input("data_store", "data"),
          Input("parcat_dropdown", "value"),
-         Input("stackedbar_dropdown_x", "value")]
+         Input("primary_color_dropdown", "value")]
     )
-    def update_figure(selected_data, selected_features, barplot_x_feature):
+    def update_figure(selected_data, selected_features, primary_color_feature):
         # Read data from data storage
         if selected_data is None:
             selected_data = data
@@ -42,12 +42,12 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         if any([color != '#bababa' for color in filtered_data['highlighted']]):
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color='highlighted')
         # If nothing is brushed, but a barplot x feature is selected, color according to that feature
-        elif barplot_x_feature != []:
+        elif primary_color_feature != []:
             # This should be doable with the line below, like we do it for the barplot and scattermap as well;
-            #fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=barplot_x_feature)
+            #fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=primary_color_feature)
             # However, for some godforsaken reason it won't work, so that's why we do this mess instead:
-            barplot_x_values = filtered_data[barplot_x_feature].value_counts().index.tolist()  # Get unique values for barplot x attribute
-            colors = filtered_data[barplot_x_feature].apply(lambda x: PLOTLY_DEFAULT_COLORS[barplot_x_values.index(x) % len(PLOTLY_DEFAULT_COLORS)])  # Color according to attribute value
+            barplot_x_values = filtered_data[primary_color_feature].value_counts().index.tolist()  # Get unique values for barplot x attribute
+            colors = filtered_data[primary_color_feature].apply(lambda x: PLOTLY_DEFAULT_COLORS[barplot_x_values.index(x) % len(PLOTLY_DEFAULT_COLORS)])  # Color according to attribute value
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=colors)
         # Otherwise, don't apply color at all
         else:

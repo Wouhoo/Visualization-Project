@@ -28,24 +28,28 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
          Input("slider", "value"),
          Input("stacked_bar", "clickData"),
          Input("parcat", "clickData"),
-         State("stackedbar_dropdown_x", "value"),
-         State("stackedbar_dropdown_color", "value")]
+         State("primary_color_dropdown", "value"),
+         State("secondary_color_dropdown", "value")]
     )
-    def filter_dataframe(map_selected_data, input_year, bar_clicked, parcat_clicked, bar_x_feature, bar_color_feature):
+    def filter_dataframe(map_selected_data, input_year, bar_clicked, parcat_clicked, primary_color_feature, secondary_color_feature):
         filtered_data = all_data.copy()
         trigger = ctx.triggered_id  # Find out which figure was clicked
 
         ### Filter based on map selection & timescale ###
         # Note: "selected" is the opacity value the point should have on the map (1 if selected, 0.05 if not)
         # Timescale selection
-        #filtered_data = filtered_data.loc[(filtered_data['Incident.year'] >= input_year[0]) & (filtered_data['Incident.year'] <= input_year[1])] 
-        filtered_data['selected'] = filtered_data['Incident.year'].apply(lambda year: 1 if (year >= input_year[0] and year <= input_year[1]) else UNSELECTED_OPACITY)
+        # "Hard-filter" version: points outside the selected year range are outright removed from the dataframe
+        filtered_data = filtered_data.loc[(filtered_data['Incident.year'] >= input_year[0]) & (filtered_data['Incident.year'] <= input_year[1])] 
+        # "Soft-filter" version: points outside the selected year range are set to selected = 0
+        #filtered_data['selected'] = filtered_data['Incident.year'].apply(lambda year: 1 if (year >= input_year[0] and year <= input_year[1]) else UNSELECTED_OPACITY)
 
         # Map selection
-        if(not map_selected_data is None):
+        if(map_selected_data is None):
+            filtered_data['selected'] = [1]*len(filtered_data)  # In this case all data is selected
+        else:
             selected_ids = [point['pointNumber'] for point in map_selected_data['points']]  # Row numbers of selected points
-            filtered_data['selected'] = filtered_data.apply(lambda row: 1 if (row['selected'] == 1 and row['UID'] in selected_ids) else UNSELECTED_OPACITY, axis=1)
-            #filtered_data['selected'].loc[selected_ids] = 1  # Now set selected to 1 only for selected points
+            filtered_data['selected'] = [UNSELECTED_OPACITY]*len(filtered_data)
+            filtered_data['selected'].loc[selected_ids] = 1  # Now set selected to 1 only for selected points
 
         ### Group low-frequency points ###
         # Group low-frequency points into an "other" category to reduce clutter (particularly in the bar and PC plots) 
@@ -62,14 +66,14 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
             selected_x_value = bar_clicked["points"][0]["x"] # x feature value corresponding to the selected (sub-)bar
 
             # Default bar chart
-            if(bar_color_feature == [] or bar_color_feature == '-'):
-                filtered_data["highlighted"] = filtered_data[bar_x_feature].apply(lambda x : selected_color if x == selected_x_value else "#bababa")  # Select incidents to highlight
+            if(secondary_color_feature == [] or secondary_color_feature == '-'):
+                filtered_data["highlighted"] = filtered_data[primary_color_feature].apply(lambda x : selected_color if x == selected_x_value else "#bababa")  # Select incidents to highlight
 
             # Stacked bar chart
             else:
-                color_names = filtered_data[bar_color_feature].value_counts().index  # Unique values for barplot color feature
+                color_names = filtered_data[secondary_color_feature].value_counts().index  # Unique values for barplot color feature
                 selected_color_value = color_names[color_index]  # Color feature value corresponding to the selected sub-bar
-                filtered_data["highlighted"] = filtered_data.apply(lambda row : selected_color if (row[bar_x_feature] == selected_x_value and row[bar_color_feature] == selected_color_value) else "#bababa", axis=1)
+                filtered_data["highlighted"] = filtered_data.apply(lambda row : selected_color if (row[primary_color_feature] == selected_x_value and row[secondary_color_feature] == selected_color_value) else "#bababa", axis=1)
         
         # User clicked on parcat bar
         elif trigger == "parcat":

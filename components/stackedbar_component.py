@@ -26,12 +26,12 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
     @app.callback(
         Output("stacked_bar", "figure"),
         [Input("data_store", "data"),
-         Input("stackedbar_dropdown_x", "value"),
-         Input("stackedbar_dropdown_color", "value"),
+         Input("primary_color_dropdown", "value"),
+         Input("secondary_color_dropdown", "value"),
          Input("stackedbar_normalize_checkbox", "value"),
          Input("stacked_bar", "clickData")]
     )
-    def update_figure(data, x_feature, color_feature, normalize, bar_clicked):
+    def update_figure(data, primary_color_feature, secondary_color_feature, normalize, bar_clicked):
         # Read in data
         if data is None:
             data = all_data
@@ -42,21 +42,21 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
 
         trigger = ctx.triggered_id
 
-        if x_feature == [] or x_feature == "-":
+        if primary_color_feature == [] or primary_color_feature == "-":
             return px.bar(None)
         else:
-            if color_feature == [] or color_feature == "-": # Effectively this uses the default bar chart if no color attribute is selected
-                color_feature = x_feature
+            if secondary_color_feature == [] or secondary_color_feature == "-": # Effectively this uses the default bar chart if no color attribute is selected
+                secondary_color_feature = primary_color_feature
         
         # Calculate number of incidents for each unique x value
-        # Returns a df with 3 columns: x_feature, color_feature, and the number of incidents for that (x_feature, color_feature) combination
-        value_counts = pd.DataFrame(filtered_data.groupby([x_feature])[color_feature].value_counts(normalize=normalize)).reset_index()
+        # Returns a df with 3 columns: primary_color_feature, secondary_color_feature, and the number of incidents for that (primary_color_feature, secondary_color_feature) combination
+        value_counts = pd.DataFrame(filtered_data.groupby([primary_color_feature])[secondary_color_feature].value_counts(normalize=normalize)).reset_index()
         y_feature = 'proportion' if normalize else 'count' 
         #print(value_counts) # TEST: if you want to see what the table looks like
 
         # Make initial plot
         selected_sequence = PLOTLY_DEFAULT_COLORS
-        fig = px.bar(value_counts, x=x_feature, y=y_feature, color=color_feature, color_discrete_sequence=selected_sequence)
+        fig = px.bar(value_counts, x=primary_color_feature, y=y_feature, color=secondary_color_feature, color_discrete_sequence=selected_sequence)
 
         # If the user clicks a bar, grey out all other bars
         if trigger == "stacked_bar":
@@ -65,14 +65,14 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
             x = bar_clicked["points"][0]["x"]
 
             # Regular bar chart
-            if(color_feature == x_feature):
+            if(secondary_color_feature == primary_color_feature):
                 # In this case a "trace" is one bar
                 fig.for_each_trace(lambda trace: trace.update(marker_color = '#bababa') if trace.x != x else ()) # Set all unselected traces to grey
             
             # Stacked bar chart
             else:
                 # In this case a trace consists of all sub-bars of the same type (i.e. all "injured" sub-bars)
-                trace_names = value_counts[color_feature].drop_duplicates()  # Trace names are the unique values of the color feature
+                trace_names = value_counts[secondary_color_feature].drop_duplicates()  # Trace names are the unique values of the color feature
                 fig.for_each_trace(lambda trace: trace.update(marker_color = '#bababa') if trace.name != trace_names[curveNumber] else ())  # Set all unselected *traces* to grey
                 #fig.for_each_trace(lambda trace: print(trace.x)) # TEST
                 fig.update_traces(selectedpoints = [pointNumber])  # Selects the full bar that was clicked (i.e. selects all sub-bars with the same pointNumber)
