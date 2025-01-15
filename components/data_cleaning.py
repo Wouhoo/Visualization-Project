@@ -1,6 +1,6 @@
 import pandas as pd
 from pandas import DataFrame
-from dash import Dash, Input, Output, State, dcc
+from dash import Dash, Input, Output, State, dcc, ctx
 
 """
 In the new "centralized dataframe" architecture, this component is responsible for
@@ -17,41 +17,46 @@ GROUPABLE_FEATURES = ["Incident.year", "Site.category", "No.sharks", "Victim.act
                       "Injury.location", "Injury.severity", "Victim.age", "Diversionary.action.taken", 
                       "Data.source", "Shark.name"]  # Columns where low-frequency data should be grouped into an "other" category
 
+UNSELECTED_OPACITY = 0.05
+
 app = Dash(__name__)
 
 def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
     @app.callback(
         Output("data_store", "data"),
         [Input("map", "selectedData"),
-         Input("stacked_bar", "clickData"),
          Input("slider", "value"),
+         Input("stacked_bar", "clickData"),
+         Input("parcat", "clickData"),
          State("stackedbar_dropdown_x", "value"),
          State("stackedbar_dropdown_color", "value")]
     )
-    def filter_dataframe(map_selected_data, bar_clicked, input_year, bar_x_feature, bar_color_feature):
-        # filtered_data = all_data.copy()
-        timedata = all_data.loc[(all_data['Incident.year'] >= input_year[0]) & (all_data['Incident.year'] <= input_year[1])]
-        filtered_data = timedata
+    def filter_dataframe(map_selected_data, input_year, bar_clicked, parcat_clicked, bar_x_feature, bar_color_feature):
+        filtered_data = all_data.copy()
+        trigger = ctx.triggered_id  # Find out which figure was clicked
 
-        # Filter based on map selection
+        ### Filter based on map selection & timescale ###
         # Note: "selected" is the opacity value the point should have on the map (1 if selected, 0.05 if not)
-        if(map_selected_data is None):
-            filtered_data['selected'] = [1]*len(timedata)  # In this case all data is selected
-        else:
-            selected_ids = [point['pointNumber'] for point in map_selected_data['points']]  # Row numbers of selected points
-            filtered_data['selected'] = [0.05]*len(all_data)
-            filtered_data['selected'].loc[selected_ids] = 1  # Now set selected to 1 only for selected points
+        # Timescale selection
+        #filtered_data = filtered_data.loc[(filtered_data['Incident.year'] >= input_year[0]) & (filtered_data['Incident.year'] <= input_year[1])] 
+        filtered_data['selected'] = filtered_data['Incident.year'].apply(lambda year: 1 if (year >= input_year[0] and year <= input_year[1]) else UNSELECTED_OPACITY)
 
+        # Map selection
+        if(not map_selected_data is None):
+            selected_ids = [point['pointNumber'] for point in map_selected_data['points']]  # Row numbers of selected points
+            filtered_data['selected'] = filtered_data.apply(lambda row: 1 if (row['selected'] == 1 and row['UID'] in selected_ids) else UNSELECTED_OPACITY, axis=1)
+            #filtered_data['selected'].loc[selected_ids] = 1  # Now set selected to 1 only for selected points
+
+        ### Group low-frequency points ###
         # Group low-frequency points into an "other" category to reduce clutter (particularly in the bar and PC plots) 
         # Which features are considered groupable is defined above.
         for feature in GROUPABLE_FEATURES:
             filtered_data = filter_low_freq(filtered_data, feature)
 
-        # Highlight based on clicked bar in barplot
+        ### Highlight based on clicked bar in barplot or PCP ###
         # Note: "highlighted" is the color the point should have in all plots (colored if highlighted, grey (#bababa) otherwise)
-        if(bar_clicked is None):
-            filtered_data['highlighted'] = ["#bababa"]*len(timedata)  # In this case, highlight all data
-        else:
+        # User clicked on barplot bar
+        if trigger == "stacked_bar":
             color_index = bar_clicked["points"][0]["curveNumber"]  # Index of bar (default) or trace (stacked) in bar chart
             selected_color = PLOTLY_DEFAULT_COLORS[color_index % len(PLOTLY_DEFAULT_COLORS)]  # Actual selected color
             selected_x_value = bar_clicked["points"][0]["x"] # x feature value corresponding to the selected (sub-)bar
@@ -65,6 +70,21 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
                 color_names = filtered_data[bar_color_feature].value_counts().index  # Unique values for barplot color feature
                 selected_color_value = color_names[color_index]  # Color feature value corresponding to the selected sub-bar
                 filtered_data["highlighted"] = filtered_data.apply(lambda row : selected_color if (row[bar_x_feature] == selected_x_value and row[bar_color_feature] == selected_color_value) else "#bababa", axis=1)
+        
+        # User clicked on parcat bar
+        elif trigger == "parcat":
+            print("PARCAT BAR CLICKED:", parcat_clicked)  # TEST
+            color_index = parcat_clicked["points"][0]["curveNumber"]  # Index of clicked barcat bar
+            selected_color = PLOTLY_DEFAULT_COLORS[color_index % len(PLOTLY_DEFAULT_COLORS)]  # Actual selected color
+            # NOTE: This selected color is currently *always blue*, since color_index is always 0 (all parts of the parcat plot have curveNumber 0)
+            # I can think of *some* ways in which we could preserve the color, but they are pretty roundabout.
+            # Instead, we could just always use one color...
+            clicked_points = [point['pointNumber'] for point in parcat_clicked['points']]  # Parcat gives us the dataframe IDs of all clicked points
+            print(filtered_data.columns)
+            filtered_data['highlighted'] = filtered_data.apply(lambda row: selected_color if (row['UID'] in clicked_points and row['selected'] == 1) else '#bababa', axis=1)  # Color only clicked points
+        # User clicked something else
+        else:
+            filtered_data['highlighted'] = ["#bababa"]*len(filtered_data)  # In this case, grey out all data
 
         # Return data with correct filtering/highlighting
         return filtered_data.to_dict()  # Note: data is stored as JSON, so it has to be converted to JSON and then converted back when reading it in another component
