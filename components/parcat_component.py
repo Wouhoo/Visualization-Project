@@ -42,7 +42,7 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         if any([color != '#bababa' for color in filtered_data['highlighted']]):
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color='highlighted')
         # If nothing is brushed, but a barplot x feature is selected, color according to that feature
-        elif primary_color_feature != []:
+        elif not(primary_color_feature is None or primary_color_feature == []):
             # This should be doable with the line below, like we do it for the barplot and scattermap as well;
             #fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=primary_color_feature)
             # However, for some godforsaken reason it won't work, so that's why we do this mess instead:

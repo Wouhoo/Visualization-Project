@@ -42,10 +42,10 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
 
         trigger = ctx.triggered_id
 
-        if primary_color_feature == [] or primary_color_feature == "-":
+        if primary_color_feature is None or primary_color_feature == []:
             return px.bar(None)
         else:
-            if secondary_color_feature == [] or secondary_color_feature == "-": # Effectively this uses the default bar chart if no color attribute is selected
+            if secondary_color_feature is None or secondary_color_feature == []: # Effectively this uses the default bar chart if no color attribute is selected
                 secondary_color_feature = primary_color_feature
         
         # Calculate number of incidents for each unique x value

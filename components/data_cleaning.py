@@ -48,8 +48,10 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
             filtered_data['selected'] = [1]*len(filtered_data)  # In this case all data is selected
         else:
             selected_ids = [point['pointNumber'] for point in map_selected_data['points']]  # Row numbers of selected points
-            filtered_data['selected'] = [UNSELECTED_OPACITY]*len(filtered_data)
-            filtered_data['selected'].loc[selected_ids] = 1  # Now set selected to 1 only for selected points
+            filtered_data['selected'] = filtered_data['UID'].apply(lambda id: 1 if id in selected_ids else UNSELECTED_OPACITY) 
+            # Old version below; the new version (line above) gets rid of a warning from pandas :)
+            #filtered_data['selected'] = [UNSELECTED_OPACITY]*len(filtered_data)
+            #filtered_data['selected'].loc[selected_ids] = 1  # Now set selected to 1 only for selected points
 
         ### Group low-frequency points ###
         # Group low-frequency points into an "other" category to reduce clutter (particularly in the bar and PC plots) 
@@ -77,12 +79,13 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
         
         # User clicked on parcat bar
         elif trigger == "parcat":
-            print("PARCAT BAR CLICKED:", parcat_clicked)  # TEST
-            color_index = parcat_clicked["points"][0]["curveNumber"]  # Index of clicked barcat bar
-            selected_color = PLOTLY_DEFAULT_COLORS[color_index % len(PLOTLY_DEFAULT_COLORS)]  # Actual selected color
+            #print("PARCAT BAR CLICKED:", parcat_clicked)  # TEST
+            #color_index = parcat_clicked["points"][0]["curveNumber"]  # Index of clicked barcat bar
+            #selected_color = PLOTLY_DEFAULT_COLORS[color_index % len(PLOTLY_DEFAULT_COLORS)]  # Actual selected color
             # NOTE: This selected color is currently *always blue*, since color_index is always 0 (all parts of the parcat plot have curveNumber 0)
             # I can think of *some* ways in which we could preserve the color, but they are pretty roundabout.
-            # Instead, we could just always use one color...
+            # Instead, we could just always use one color, like below:
+            selected_color = '#FFFFFF'  # Solid white - currently hard to see in the PCP, but this will hopefully change when we switch to dark mode
             clicked_points = [point['pointNumber'] for point in parcat_clicked['points']]  # Parcat gives us the dataframe IDs of all clicked points
             print(filtered_data.columns)
             filtered_data['highlighted'] = filtered_data.apply(lambda row: selected_color if (row['UID'] in clicked_points and row['selected'] == 1) else '#bababa', axis=1)  # Color only clicked points

@@ -10,7 +10,7 @@ app = Dash(external_stylesheets=[BOOTSTRAP])
 df = pd.read_excel('sharks_clean.xlsx')
 
 # Options for dropdowns
-plotable_columns = ["Incident.month", "Victim.injury", "State", "Site.category", "Provoked/unprovoked",
+plotable_columns = ["Incident.month", "Victim.injury", "State", "Site.category", "Provoked/unprovoked", # "Present.at.time.of.bite", "Injury.location", # These two attributes have a lot of unknown/other values, but might still give insights
                      "Victim.activity", "Injury.severity", "Victim.gender", "Data.source", "Shark.name"]
 gradient_columns = ["Incident.month", "Incident.year", "Shark.length.m", "Victim.age", "Time.of.incident"]
 
@@ -53,11 +53,14 @@ def create_layout(app: Dash) -> html.Div:
                             #dropdown_component.render(app, id="barplot_dropdown", name="Barplot Attribute", 
                             #            values={col.replace(".", " "): col for col in plotable_columns}), # Old barplot dropdown
                             dropdown_component.render(app, id="primary_color_dropdown", name="Primary color attribute", 
-                                        values={col.replace(".", " "): col for col in plotable_columns}),
+                                        values={col.replace(".", " "): col for col in plotable_columns},
+                                        default_value = "State"),
                             dropdown_component.render(app, id="secondary_color_dropdown", name="Barplot: Secondary color attribute", 
-                                        values={col.replace(".", " "): col for col in plotable_columns}),
+                                        values={col.replace(".", " "): col for col in plotable_columns},
+                                        default_value = []),
                             dropdown_component.render(app, id="parcat_dropdown", name="Parallel categories attributes", 
-                                        values={col.replace(".", " "): col for col in plotable_columns}, is_multiple_choice=True),         
+                                        values={col.replace(".", " "): col for col in plotable_columns}, is_multiple_choice=True,
+                                        default_value = ["State", "Victim.injury"]),         
                             #dropdown_component.render(app, id="map_dropdown", name="Map Attribute", 
                             #                            values={col.replace(".", " "): col for col in
                             #                                    plotable_columns + gradient_columns}) # Old map dropdown
