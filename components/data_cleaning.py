@@ -63,17 +63,19 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
         # Note: "highlighted" is the color the point should have in all plots (colored if highlighted, grey (#bababa) otherwise)
         # User clicked on barplot bar
         if trigger == "stacked_bar":
+            print("BAR CLICKED: ", bar_clicked)  # TEST
             color_index = bar_clicked["points"][0]["curveNumber"]  # Index of bar (default) or trace (stacked) in bar chart
             selected_color = PLOTLY_DEFAULT_COLORS[color_index % len(PLOTLY_DEFAULT_COLORS)]  # Actual selected color
             selected_x_value = bar_clicked["points"][0]["x"] # x feature value corresponding to the selected (sub-)bar
 
             # Default bar chart
-            if(secondary_color_feature == [] or secondary_color_feature == '-'):
+            if(secondary_color_feature is None or secondary_color_feature == []):
                 filtered_data["highlighted"] = filtered_data[primary_color_feature].apply(lambda x : selected_color if x == selected_x_value else "#bababa")  # Select incidents to highlight
 
             # Stacked bar chart
             else:
-                color_names = filtered_data[secondary_color_feature].value_counts().index  # Unique values for barplot color feature
+                color_names = filtered_data[secondary_color_feature].value_counts().index.tolist()  # Unique values for barplot color feature
+                color_names = sorted(color_names)  # Sort alphabetically
                 selected_color_value = color_names[color_index]  # Color feature value corresponding to the selected sub-bar
                 filtered_data["highlighted"] = filtered_data.apply(lambda row : selected_color if (row[primary_color_feature] == selected_x_value and row[secondary_color_feature] == selected_color_value) else "#bababa", axis=1)
         
@@ -87,7 +89,6 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
             # Instead, we could just always use one color, like below:
             selected_color = '#FFFFFF'  # Solid white - currently hard to see in the PCP, but this will hopefully change when we switch to dark mode
             clicked_points = [point['pointNumber'] for point in parcat_clicked['points']]  # Parcat gives us the dataframe IDs of all clicked points
-            print(filtered_data.columns)
             filtered_data['highlighted'] = filtered_data.apply(lambda row: selected_color if (row['UID'] in clicked_points and row['selected'] == 1) else '#bababa', axis=1)  # Color only clicked points
         # User clicked something else
         else:
@@ -111,5 +112,5 @@ def filter_low_freq(data: DataFrame, feature: str) -> DataFrame:
         low_freq_values = value_freq[value_freq < one_percent]  # Find which values occur infrequently (in this case, which values account for less than 1% of the total)
         if(len(low_freq_values) > 0):
             data[feature] = data[feature].astype("string")    # If there are low frequency values, cast the column to string type and...
-            data[feature].loc[data[feature].isin(low_freq_values.index.tolist())] = "other"  # ...replace low frequency values with "other"
+            data[feature] = data[feature].apply(lambda value: "other" if value in low_freq_values else value) # ...replace low frequency values with "other"
     return data

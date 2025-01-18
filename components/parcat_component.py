@@ -43,10 +43,12 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color='highlighted')
         # If nothing is brushed, but a barplot x feature is selected, color according to that feature
         elif not(primary_color_feature is None or primary_color_feature == []):
+            filtered_data = filtered_data.sort_values(primary_color_feature)  # Sort data alphabetically
             # This should be doable with the line below, like we do it for the barplot and scattermap as well;
             #fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=primary_color_feature)
             # However, for some godforsaken reason it won't work, so that's why we do this mess instead:
             barplot_x_values = filtered_data[primary_color_feature].value_counts().index.tolist()  # Get unique values for barplot x attribute
+            barplot_x_values = sorted(barplot_x_values)  # Sort alphabetically
             colors = filtered_data[primary_color_feature].apply(lambda x: PLOTLY_DEFAULT_COLORS[barplot_x_values.index(x) % len(PLOTLY_DEFAULT_COLORS)])  # Color according to attribute value
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=colors)
         # Otherwise, don't apply color at all

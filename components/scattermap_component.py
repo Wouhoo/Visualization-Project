@@ -34,6 +34,7 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
 
         # If a bar is clicked in the barplot or PCP, change color based on the highlighted bar
         if any([color != '#bababa' for color in data['highlighted']]):
+            data = data.sort_values('highlighted', ascending=False)  # Sort so highlighted points are drawn on top
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name", width=1000, height=700,
                                  zoom=3,
                                  custom_data=["UID"],
@@ -43,6 +44,7 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
 
         # Otherwise, change color based on primary color attribute if one is selected
         elif primary_color_feature != []:
+            data = data.sort_values(primary_color_feature)  # Sort alphabetically based on selected attribute
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
                         zoom=3,
                         custom_data=["UID"],
