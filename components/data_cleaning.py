@@ -22,7 +22,7 @@ GROUPABLE_FEATURES = ["Incident.year", "Site.category", "No.sharks", "Victim.act
 MONTH_ORDER = {'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6, 'JUL': 7, 'AUG': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DEC': 12}
 
 # Opacity of points not selected on the map
-UNSELECTED_OPACITY = 0.05
+UNSELECTED_OPACITY = 0
 
 app = Dash(__name__)
 
@@ -45,19 +45,18 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
         # Note: "selected" is the opacity value the point should have on the map (1 if selected, 0.05 if not)
         # Timescale selection
         # "Hard-filter" version: points outside the selected year range are outright removed from the dataframe
-        filtered_data = filtered_data.loc[(filtered_data['Incident.year'] >= input_year[0]) & (filtered_data['Incident.year'] <= input_year[1])] 
+        filtered_data = filtered_data.loc[(filtered_data['Incident.year'] >= input_year[0]) & (filtered_data['Incident.year'] <= input_year[1])]
         # "Soft-filter" version: points outside the selected year range are set to selected = 0
         #filtered_data['selected'] = filtered_data['Incident.year'].apply(lambda year: 1 if (year >= input_year[0] and year <= input_year[1]) else UNSELECTED_OPACITY)
-
         # Map selection
         if(map_selected_data is None):
             filtered_data['selected'] = [1]*len(filtered_data)  # In this case all data is selected
         else:
-            selected_ids = [point['pointNumber'] for point in map_selected_data['points']]  # Row numbers of selected points
+            selected_ids = [point['customdata'][0] for point in map_selected_data['points']]  # Row numbers of selected points
             filtered_data['selected'] = filtered_data['UID'].apply(lambda id: 1 if id in selected_ids else UNSELECTED_OPACITY) 
-            # Old version below; the new version (line above) gets rid of a warning from pandas :)
-            #filtered_data['selected'] = [UNSELECTED_OPACITY]*len(filtered_data)
-            #filtered_data['selected'].loc[selected_ids] = 1  # Now set selected to 1 only for selected points
+
+
+
 
         ### Group low-frequency points ###
         # Group low-frequency points into an "other" category to reduce clutter (particularly in the bar and PC plots) 
@@ -92,18 +91,18 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
             # Instead, we could just always use one color, like below:
             selected_color = '#FFFFFF'  # Solid white - currently hard to see in the PCP, but this will hopefully change when we switch to dark mode
             clicked_points = [point['pointNumber'] for point in parcat_clicked['points']]  # Parcat gives us the dataframe IDs of all clicked points
-            filtered_data['highlighted'] = ["#bababa"]*len(filtered_data)
+            filtered_data['highlighted'] = ["#c7c7c7"]*len(filtered_data)
             filtered_data.loc[filtered_data.index.isin(clicked_points), 'highlighted'] = selected_color  # Color only clicked points
             #filtered_data['highlighted'] = filtered_data.apply(lambda row: selected_color if (row['UID'] in clicked_points and row['selected'] == 1) else '#bababa', axis=1)  # Color only clicked points
         
         # User clicked on clear selection button: clear both map selection and highlights
         elif trigger == "clear_selection_button":
             filtered_data['selected'] = [1]*len(filtered_data)
-            filtered_data['highlighted'] = ["#bababa"]*len(filtered_data)
+            filtered_data['highlighted'] = ["#c7c7c7"]*len(filtered_data)
 
         # User clicked something else: clear highlights
         else:
-            filtered_data['highlighted'] = ["#bababa"]*len(filtered_data)
+            filtered_data['highlighted'] = ["#c7c7c7"]*len(filtered_data)
 
         # Return data with correct filtering/highlighting
         return filtered_data.to_dict()  # Note: data is stored as JSON, so it has to be converted to JSON and then converted back when reading it in another component
