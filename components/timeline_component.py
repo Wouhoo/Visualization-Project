@@ -31,9 +31,11 @@ def render(app: Dash, data: DataFrame, id: str) -> html.Div:
         # Dynamic histogram for filtered data
         dynamic_trace = go.Histogram(
             x=filtered_data['Incident.year'],
-            xbins=dict(size=1),
-            marker_color='blue',
-            opacity=0.7
+            xbins=dict(size=1), 
+            marker_color = "blue",
+            opacity=0.7, 
+            name="",
+            hovertemplate="Year: %{x}<br>Incidents: %{y}<br>%{fullData.name}" 
         )
 
         # Static plot trace (remains the same)
@@ -41,7 +43,7 @@ def render(app: Dash, data: DataFrame, id: str) -> html.Div:
             x=data['Incident.year'],
             xbins=dict(size=1),
             marker_color='grey',
-            opacity=0.4
+            opacity=0.4, 
         )
 
         # Combine both traces in a single figure
@@ -50,11 +52,12 @@ def render(app: Dash, data: DataFrame, id: str) -> html.Div:
             yaxis_title="Incidents",
             yaxis=dict(title_standoff=5),
             barmode='overlay',  
-            showlegend=False
+            showlegend=False, 
         )
         fig.update_xaxes(visible=False, showticklabels=False)
 
         return fig
+        
 
     return html.Div(
             children = [
@@ -65,9 +68,12 @@ def render(app: Dash, data: DataFrame, id: str) -> html.Div:
                     max_year,
                     step=1,
                     value=[ min_year,  max_year ],
-                    # marks = { year: str(year) if year % 20 == 0 else '' 
-                    #          for year in range(min_year, max_year +1)}, # Show text every 15 years, empty string for others
-                    marks={str(year): str(year) for year in range(max_year, min_year, -15)},
+                    
+                    # marks = {i: '{}'.format(i) for i in range(min_year,max_year, 10), style = {'writingMode': 'vertical-rl', 'textOrientation': 'mixed'}},
+    
+                    marks={
+                        str(year): {'label': str(year), 'style' : {'transform': 'rotate(45deg)', 'whiteSpace': 'nowrap'}}
+                            for year in range(max_year, min_year, -10)},
                     # if we want the slider to go about rounded years:
                     # marks={str(year): str(year) for year in range(max_year + 1 ,min_year, -20)},
                     id= "slider",
