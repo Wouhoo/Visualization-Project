@@ -2,7 +2,7 @@ from dash import Dash, html, dcc, Input, Output
 import plotly.express as px
 import pandas as pd
 from pandas import DataFrame
-from .data_cleaning import filter_low_freq
+from .data_cleaning import CUSTOM_SORTING
 
 """
 Creates a new parallel categories component instance.
@@ -40,15 +40,15 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         # Make PCP with color according to selected dropdown values
         # If anything is brushed, apply brushing colors - this is highest priority.
         if any([color != '#bababa' for color in filtered_data['highlighted']]):
+            #filtered_data = filtered_data.sort_values('highlighted')  # Sort data by highlight
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color='highlighted')
         # If nothing is brushed, but a barplot x feature is selected, color according to that feature
         elif not(primary_color_feature is None or primary_color_feature == []):
-            filtered_data = filtered_data.sort_values(primary_color_feature)  # Sort data alphabetically
             # This should be doable with the line below, like we do it for the barplot and scattermap as well;
             #fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=primary_color_feature)
             # However, for some godforsaken reason it won't work, so that's why we do this mess instead:
             barplot_x_values = filtered_data[primary_color_feature].value_counts().index.tolist()  # Get unique values for barplot x attribute
-            barplot_x_values = sorted(barplot_x_values)  # Sort alphabetically
+            barplot_x_values = sorted(barplot_x_values, key=lambda x: CUSTOM_SORTING[x])  # Sort according to order in data_cleaning
             colors = filtered_data[primary_color_feature].apply(lambda x: PLOTLY_DEFAULT_COLORS[barplot_x_values.index(x) % len(PLOTLY_DEFAULT_COLORS)])  # Color according to attribute value
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=colors)
         # Otherwise, don't apply color at all
@@ -56,6 +56,8 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
             colors = ['#bababa']*len(filtered_data)
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=colors)
 
+        # Sort categories according to order in data_cleaning (apologies for the unreadable one-liner)
+        fig.update_traces(dimensions=[{'categoryorder': 'array', 'categoryarray': sorted(filtered_data[feature].drop_duplicates(), key=lambda x: CUSTOM_SORTING[x])} for feature in selected_features])
         return fig
     
     return dcc.Graph(id = id)

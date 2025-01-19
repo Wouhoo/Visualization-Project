@@ -1,8 +1,8 @@
 import plotly.express as px
 from dash import Dash, dcc, ctx
 from pandas import DataFrame
-
 from dash.dependencies import Input, Output, State
+from .data_cleaning import CUSTOM_SORTING
 
 #Predefined colors for specific attributes
 PREDEFINED_COLORS = {"Provoked/unprovoked": ["#00c49d","#c42e00","#dbdbdb"],
@@ -44,7 +44,7 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
 
         # Otherwise, change color based on primary color attribute if one is selected
         elif primary_color_feature != []:
-            data = data.sort_values(primary_color_feature)  # Sort alphabetically based on selected attribute
+            data = data.sort_values(primary_color_feature, key=lambda x: x.map(CUSTOM_SORTING))  # Sort based on order in data_cleaning
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
                         zoom=3,
                         custom_data=["UID"],

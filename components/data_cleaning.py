@@ -13,10 +13,26 @@ which is then used as input by all other components.
 PLOTLY_DEFAULT_COLORS = ['#636EFA','#EF553B','#00CC96','#AB63FA','#FFA15A','#19D3F3','#FF6692',
                         '#B6E880','#FF97FF','#FECB52']
 
+# Columns where low-frequency data should be grouped into an "other" category
 GROUPABLE_FEATURES = ["Incident.year", "Site.category", "No.sharks", "Victim.activity", "Present.at.time.of.bite", 
                       "Injury.location", "Injury.severity", "Victim.age", "Diversionary.action.taken", 
-                      "Data.source", "Shark.name"]  # Columns where low-frequency data should be grouped into an "other" category
+                      "Data.source", "Shark.name"]  
 
+# Custom sort order for various attributes
+CUSTOM_SORTING = {'other': 990, 'Other': 991, 'unknown': 992, 'Unknown': 993,  # forces unknown/other values to always be last
+                  'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6, 'JUL': 7, 'AUG': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DEC': 12,  # Incident.month
+                  'uninjured': 1, 'injured': 2, 'fatal': 3,  # Victim.injury
+                  'NSW': 1, 'NT': 2, 'QLD': 3, 'SA': 4, 'TAS': 5, 'VIC': 6, 'WA': 7,  # State
+                  'coastal': 1, 'deep_coast': 2, 'island': 3, 'ocean': 4, 'river': 5,  # Site.category
+                  'provoked': 1, 'unprovoked': 2,  # Provoked/unprovoked
+                  'boarding': 1, 'boating': 2, 'diving': 3, 'fishing': 4, 'snorkeling': 5, 'spearfishing': 6, 'standing': 7, 'swimming': 8,  # Victim.activity
+                  'abrasion': 1, 'major lacerations': 2, 'minor lacerations': 3, 'teeth marks': 4,  # Injury.severity
+                  'M': 1, 'F': 2,  # Victim.gender
+                  'ASAF questionnaire': 1, 'book': 2, 'government report': 3, 'media outlet': 4, 'witness account': 5,  # Data.source
+                  'bronze whaler shark (Carcharhinus brachyurus)': 1, 'bull shark (Carcharhinus leucas)': 2, 'tiger shark (Galeocerdo cuvier)': 3, 
+                  'whaler shark (Carcharhinidae)': 4, 'white shark (Carcharodon carcharias)': 5, 'wobbegong (Orectolobidae)': 6}  # Shark.name
+
+# Opacity of points not selected on the map
 UNSELECTED_OPACITY = 0.05
 
 app = Dash(__name__)
@@ -63,7 +79,6 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
         # Note: "highlighted" is the color the point should have in all plots (colored if highlighted, grey (#bababa) otherwise)
         # User clicked on barplot bar
         if trigger == "stacked_bar":
-            print("BAR CLICKED: ", bar_clicked)  # TEST
             color_index = bar_clicked["points"][0]["curveNumber"]  # Index of bar (default) or trace (stacked) in bar chart
             selected_color = PLOTLY_DEFAULT_COLORS[color_index % len(PLOTLY_DEFAULT_COLORS)]  # Actual selected color
             selected_x_value = bar_clicked["points"][0]["x"] # x feature value corresponding to the selected (sub-)bar
@@ -81,15 +96,15 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
         
         # User clicked on parcat bar
         elif trigger == "parcat":
-            #print("PARCAT BAR CLICKED:", parcat_clicked)  # TEST
-            #color_index = parcat_clicked["points"][0]["curveNumber"]  # Index of clicked barcat bar
-            #selected_color = PLOTLY_DEFAULT_COLORS[color_index % len(PLOTLY_DEFAULT_COLORS)]  # Actual selected color
+            print("PARCAT POINTS CLICKED:", parcat_clicked)  # TEST
             # NOTE: This selected color is currently *always blue*, since color_index is always 0 (all parts of the parcat plot have curveNumber 0)
             # I can think of *some* ways in which we could preserve the color, but they are pretty roundabout.
             # Instead, we could just always use one color, like below:
             selected_color = '#FFFFFF'  # Solid white - currently hard to see in the PCP, but this will hopefully change when we switch to dark mode
             clicked_points = [point['pointNumber'] for point in parcat_clicked['points']]  # Parcat gives us the dataframe IDs of all clicked points
-            filtered_data['highlighted'] = filtered_data.apply(lambda row: selected_color if (row['UID'] in clicked_points and row['selected'] == 1) else '#bababa', axis=1)  # Color only clicked points
+            filtered_data['highlighted'] = ["#bababa"]*len(filtered_data)
+            filtered_data.loc[filtered_data.index.isin(clicked_points), 'highlighted'] = selected_color  # Color only clicked points
+            #filtered_data['highlighted'] = filtered_data.apply(lambda row: selected_color if (row['UID'] in clicked_points and row['selected'] == 1) else '#bababa', axis=1)  # Color only clicked points
         # User clicked something else
         else:
             filtered_data['highlighted'] = ["#bababa"]*len(filtered_data)  # In this case, grey out all data

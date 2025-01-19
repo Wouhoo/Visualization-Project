@@ -2,7 +2,7 @@ from dash import Dash, html, dcc, Input, Output, ctx
 import plotly.express as px
 import pandas as pd
 from pandas import DataFrame
-from .data_cleaning import filter_low_freq
+from .data_cleaning import CUSTOM_SORTING
 
 """
 Creates a new scatterplot component instance.
@@ -54,7 +54,6 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
         
         # Get counts for each (primary, secondary) combination. Note: for the stacked bar chart, not all combinations are present in this df!
         value_counts = pd.DataFrame(filtered_data.groupby([primary_color_feature])[secondary_color_feature].value_counts(normalize=normalize)).reset_index()
-        value_counts = value_counts.sort_values([primary_color_feature, secondary_color_feature])  # Sort alphabetically based on selected attributes
         # Whether we have count or proportion on the y-axis
         y_feature = 'proportion' if normalize else 'count' 
 
@@ -64,9 +63,9 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
         # Stacked bar chart; in this case *all (primary, secondary) combinations have to be present* in the df, otherwise we get a lot of bugs. 
         # That's why the method below is a bit roundabout.
         else:
-            # Get unique values for primary and secondary color features (sorted alphabetically) and create dataframe with every (primary, secondary) combination
-            primary_feature_values = DataFrame(filtered_data[primary_color_feature].drop_duplicates().sort_values())
-            secondary_feature_values = DataFrame(filtered_data[secondary_color_feature].drop_duplicates().sort_values())
+            # Get unique values for primary and secondary color features and create dataframe with every (primary, secondary) combination
+            primary_feature_values = DataFrame(filtered_data[primary_color_feature].drop_duplicates())
+            secondary_feature_values = DataFrame(filtered_data[secondary_color_feature].drop_duplicates())
             # Create dataframe with every combination of primary and secondary feature value
             all_combinations = primary_feature_values.merge(secondary_feature_values, how='cross')
             # Add the counts/proportions we calculated earlier; fill in a 0 if that combination does not occur in the dataset
@@ -75,6 +74,8 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
             if not normalize: 
                 all_combinations[y_feature] = all_combinations[y_feature].astype(int)
 
+        # Sort values according to sort order defined in data_cleaning.py
+        all_combinations = all_combinations.sort_values(by=[primary_color_feature, secondary_color_feature], key = lambda x: x.map(CUSTOM_SORTING))
         #print("COMBINED DATAFRAME: ", all_combinations)  # TEST: If you want to see what the df looks like
 
         # Make initial plot
@@ -104,6 +105,7 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
         # TEST: implementing animations "quick and dirty" using plotly's built-in stuff
         #fig.update_layout(transition_ordering="traces first")  # For smooth transitions between bars
         # This looks pretty cool in the regular bar plot, but does not work well at all in the stacked plot...
+
         return fig
     
     return dcc.Graph(id = id)
