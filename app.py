@@ -72,14 +72,15 @@ def create_layout(app: Dash) -> html.Div:
                             checklist_component.render(app, id="stackedbar_normalize_checkbox", values=["Normalize stacked bar chart?"])
                         ]
                     ),
-                      html.Div(
+                    # Time slider
+                    html.Div(
                         className = "TimeLine",
                         children = [
                             timeline_component.render(app, data=df, id = "timeline",)
                         ]
                     ),
-
-
+                    # Clear selection button
+                    html.Button('Clear selection', id='clear_selection_button')
             ]),
             # Main map
             html.Div(

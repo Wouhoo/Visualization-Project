@@ -2,7 +2,7 @@ from dash import Dash, html, dcc, Input, Output
 import plotly.express as px
 import pandas as pd
 from pandas import DataFrame
-from .data_cleaning import CUSTOM_SORTING
+from .data_cleaning import MONTH_ORDER
 
 """
 Creates a new parallel categories component instance.
@@ -42,22 +42,28 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         if any([color != '#bababa' for color in filtered_data['highlighted']]):
             #filtered_data = filtered_data.sort_values('highlighted')  # Sort data by highlight
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color='highlighted')
+
         # If nothing is brushed, but a barplot x feature is selected, color according to that feature
         elif not(primary_color_feature is None or primary_color_feature == []):
             # This should be doable with the line below, like we do it for the barplot and scattermap as well;
             #fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=primary_color_feature)
             # However, for some godforsaken reason it won't work, so that's why we do this mess instead:
             barplot_x_values = filtered_data[primary_color_feature].value_counts().index.tolist()  # Get unique values for barplot x attribute
-            barplot_x_values = sorted(barplot_x_values, key=lambda x: CUSTOM_SORTING[x])  # Sort according to order in data_cleaning
+            # Sort months according to special ordering, otherwise sort alphabetically
+            if(primary_color_feature == 'Incident.month'):
+                barplot_x_values = sorted(barplot_x_values, key=lambda x: MONTH_ORDER[x])
+            else:
+                barplot_x_values = sorted(barplot_x_values)
             colors = filtered_data[primary_color_feature].apply(lambda x: PLOTLY_DEFAULT_COLORS[barplot_x_values.index(x) % len(PLOTLY_DEFAULT_COLORS)])  # Color according to attribute value
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=colors)
+            
         # Otherwise, don't apply color at all
         else:
             colors = ['#bababa']*len(filtered_data)
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=colors)
 
-        # Sort categories according to order in data_cleaning (apologies for the unreadable one-liner)
-        fig.update_traces(dimensions=[{'categoryorder': 'array', 'categoryarray': sorted(filtered_data[feature].drop_duplicates(), key=lambda x: CUSTOM_SORTING[x])} for feature in selected_features])
+        # Sort categories according to order in data_cleaning (apologies for the long one-liner)
+        fig.update_traces(dimensions=[{'categoryorder': 'array', 'categoryarray': sorted(filtered_data[feature].drop_duplicates(), key=((lambda x: MONTH_ORDER[x]) if feature == 'Incident.month' else None))} for feature in selected_features])
         return fig
     
     return dcc.Graph(id = id)

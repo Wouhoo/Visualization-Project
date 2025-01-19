@@ -18,19 +18,8 @@ GROUPABLE_FEATURES = ["Incident.year", "Site.category", "No.sharks", "Victim.act
                       "Injury.location", "Injury.severity", "Victim.age", "Diversionary.action.taken", 
                       "Data.source", "Shark.name"]  
 
-# Custom sort order for various attributes
-CUSTOM_SORTING = {'other': 990, 'Other': 991, 'unknown': 992, 'Unknown': 993,  # forces unknown/other values to always be last
-                  'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6, 'JUL': 7, 'AUG': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DEC': 12,  # Incident.month
-                  'uninjured': 1, 'injured': 2, 'fatal': 3,  # Victim.injury
-                  'NSW': 1, 'NT': 2, 'QLD': 3, 'SA': 4, 'TAS': 5, 'VIC': 6, 'WA': 7,  # State
-                  'coastal': 1, 'deep_coast': 2, 'island': 3, 'ocean': 4, 'river': 5,  # Site.category
-                  'provoked': 1, 'unprovoked': 2,  # Provoked/unprovoked
-                  'boarding': 1, 'boating': 2, 'diving': 3, 'fishing': 4, 'snorkeling': 5, 'spearfishing': 6, 'standing': 7, 'swimming': 8,  # Victim.activity
-                  'abrasion': 1, 'major lacerations': 2, 'minor lacerations': 3, 'teeth marks': 4,  # Injury.severity
-                  'M': 1, 'F': 2,  # Victim.gender
-                  'ASAF questionnaire': 1, 'book': 2, 'government report': 3, 'media outlet': 4, 'witness account': 5,  # Data.source
-                  'bronze whaler shark (Carcharhinus brachyurus)': 1, 'bull shark (Carcharhinus leucas)': 2, 'tiger shark (Galeocerdo cuvier)': 3, 
-                  'whaler shark (Carcharhinidae)': 4, 'white shark (Carcharodon carcharias)': 5, 'wobbegong (Orectolobidae)': 6}  # Shark.name
+# Custom sort order for month
+MONTH_ORDER = {'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6, 'JUL': 7, 'AUG': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DEC': 12}
 
 # Opacity of points not selected on the map
 UNSELECTED_OPACITY = 0.05
@@ -44,10 +33,11 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
          Input("slider", "value"),
          Input("stacked_bar", "clickData"),
          Input("parcat", "clickData"),
+         Input("clear_selection_button", "n_clicks"),
          State("primary_color_dropdown", "value"),
          State("secondary_color_dropdown", "value")]
     )
-    def filter_dataframe(map_selected_data, input_year, bar_clicked, parcat_clicked, primary_color_feature, secondary_color_feature):
+    def filter_dataframe(map_selected_data, input_year, bar_clicked, parcat_clicked, clear_selection_button, primary_color_feature, secondary_color_feature):
         filtered_data = all_data.copy()
         trigger = ctx.triggered_id  # Find out which figure was clicked
 
@@ -105,9 +95,15 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
             filtered_data['highlighted'] = ["#bababa"]*len(filtered_data)
             filtered_data.loc[filtered_data.index.isin(clicked_points), 'highlighted'] = selected_color  # Color only clicked points
             #filtered_data['highlighted'] = filtered_data.apply(lambda row: selected_color if (row['UID'] in clicked_points and row['selected'] == 1) else '#bababa', axis=1)  # Color only clicked points
-        # User clicked something else
+        
+        # User clicked on clear selection button: clear both map selection and highlights
+        elif trigger == "clear_selection_button":
+            filtered_data['selected'] = [1]*len(filtered_data)
+            filtered_data['highlighted'] = ["#bababa"]*len(filtered_data)
+
+        # User clicked something else: clear highlights
         else:
-            filtered_data['highlighted'] = ["#bababa"]*len(filtered_data)  # In this case, grey out all data
+            filtered_data['highlighted'] = ["#bababa"]*len(filtered_data)
 
         # Return data with correct filtering/highlighting
         return filtered_data.to_dict()  # Note: data is stored as JSON, so it has to be converted to JSON and then converted back when reading it in another component
@@ -127,5 +123,5 @@ def filter_low_freq(data: DataFrame, feature: str) -> DataFrame:
         low_freq_values = value_freq[value_freq < one_percent]  # Find which values occur infrequently (in this case, which values account for less than 1% of the total)
         if(len(low_freq_values) > 0):
             data[feature] = data[feature].astype("string")    # If there are low frequency values, cast the column to string type and...
-            data[feature] = data[feature].apply(lambda value: "other" if value in low_freq_values else value) # ...replace low frequency values with "other"
+            data[feature] = data[feature].apply(lambda value: "~Other" if value in low_freq_values else value) # ...replace low frequency values with "other"
     return data

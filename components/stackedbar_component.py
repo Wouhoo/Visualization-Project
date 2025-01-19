@@ -2,7 +2,7 @@ from dash import Dash, html, dcc, Input, Output, ctx
 import plotly.express as px
 import pandas as pd
 from pandas import DataFrame
-from .data_cleaning import CUSTOM_SORTING
+from .data_cleaning import MONTH_ORDER
 
 """
 Creates a new scatterplot component instance.
@@ -74,8 +74,13 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
             if not normalize: 
                 all_combinations[y_feature] = all_combinations[y_feature].astype(int)
 
-        # Sort values according to sort order defined in data_cleaning.py
-        all_combinations = all_combinations.sort_values(by=[primary_color_feature, secondary_color_feature], key = lambda x: x.map(CUSTOM_SORTING))
+        # Sort months according to special ordering, otherwise sort alphabetically
+        if(primary_color_feature == 'Incident.month'):
+            all_combinations = all_combinations.sort_values(by=[primary_color_feature, secondary_color_feature], key = lambda x: x.map(MONTH_ORDER))
+        elif(secondary_color_feature == 'Incident.month'):
+            all_combinations = all_combinations.sort_values(by=[primary_color_feature, secondary_color_feature], key = lambda x: x.map(MONTH_ORDER))
+        else:
+            all_combinations = all_combinations.sort_values(by=[primary_color_feature, secondary_color_feature])
         #print("COMBINED DATAFRAME: ", all_combinations)  # TEST: If you want to see what the df looks like
 
         # Make initial plot
