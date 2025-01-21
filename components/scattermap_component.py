@@ -2,7 +2,7 @@ import plotly.express as px
 from dash import Dash, dcc, ctx
 from pandas import DataFrame
 from dash.dependencies import Input, Output, State
-from .data_cleaning import MONTH_ORDER
+from .data_cleaning import MONTH_ORDER, GRAYED_OUT_COLOR
 
 #Predefined colors for specific attributes
 PREDEFINED_COLORS = {"Provoked/unprovoked": ["#00c49d","#c42e00","#dbdbdb"],
@@ -25,41 +25,45 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
         Output("map", "figure"),
         Input("data_store", "data"),
         Input("primary_color_dropdown", "value"),
-        State("primary_color_dropdown", "value"),
-        State("secondary_color_dropdown", "value"),
+        Input("secondary_color_dropdown", "value"),
         prevent_initial_call=True
     )
-    def change_display(data, primary_color_feature, primary_color_value, secondary_color_value):
+    def change_display(data, primary_color_feature, secondary_color_feature):
         # Read data
         if data is None:
             data = all_data
         data = DataFrame(data)  # Convert stored JSON to dataframe
 
+        # Find highest-priority color feature
+        if not(secondary_color_feature is None or secondary_color_feature == []):
+            color_feature = secondary_color_feature
+        else:
+            color_feature = primary_color_feature
+
         # If a bar is clicked in the barplot or PCP, change color based on the highlighted bar
-        if any([color != '#bababa' for color in data['highlighted']]):
+        if any([color != GRAYED_OUT_COLOR for color in data['highlighted']]):
             data = data.sort_values('highlighted', ascending=False)  # Sort so highlighted points are drawn on top
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name", width=1000, height=700,
                                  zoom=3,
-                                 custom_data=GLOBAL_CUSTOM_DATA,
-                                 )
+                                 custom_data=GLOBAL_CUSTOM_DATA)
             fig.update_traces(marker_color=data['highlighted'])
 
         # Otherwise, change color based on primary color attribute if one is selected
-        elif primary_color_feature != []:
+        elif not(color_feature is None or color_feature == []):
             # Sort months according to special ordering, otherwise sort alphabetically
-            if(primary_color_feature == 'Incident.month'):
-                data = data.sort_values(primary_color_feature, key=lambda x: x.map(MONTH_ORDER))
+            if(color_feature == 'Incident.month'):
+                data = data.sort_values(color_feature, key=lambda x: x.map(MONTH_ORDER))
             else:
-                data = data.sort_values(primary_color_feature)
+                data = data.sort_values(color_feature)
             # Make figure
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
                         zoom=3,
                         custom_data=GLOBAL_CUSTOM_DATA,
-                        color=primary_color_feature)
+                        color=color_feature, labels={color_feature: color_feature.replace(".", " ")})
 
         # If no primary color attribute is selected, grey out all points
         else:
-            colorSeq = ['#bababa']
+            colorSeq = [GRAYED_OUT_COLOR]
             fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
                                  zoom=3,
                                  custom_data=GLOBAL_CUSTOM_DATA,
@@ -68,49 +72,51 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
         # Set map to dark mode, make unselected points transparent & return figure
         fig.update_layout(map_style="dark")  # Dark, Light, Satelite
         fig.update_traces(marker_opacity=data['selected'])
+        # Unsuccesful tests
+        #fig.for_each_trace("TRACE IDs: ", lambda trace: print(trace.name, ": ", trace.ids))  # Always None fsr...
+        #fig.update_traces(selectedpoints=data.loc[data['selected']==1].index)
+        #fig.update_traces(selectedpoints=data.loc[data['selected']==1, 'UID'])
 
-        #Set Hoverable template for all points. Points that are NOT selected (aka not visible) have
-        #no hover info.
+        #Set Hoverable template for all points. Points that are NOT selected (aka not visible) have no hover info.
         fig.update_traces(
             hoverinfo="text",
             hovertemplate=[
-                None if hoverable == 0 else _get_hover_template(primary_color_value, secondary_color_value)
+                None if hoverable == 0 else _get_hover_template(color_feature)
                 for hoverable in data['selected']
             ]
         )
+
+        fig.update_layout(map=dict(style="dark"), font_color="#bcbcbc")  # Dark, Light, Satelite
+        fig.update_layout(margin=dict(l=0, r=0, t=40, b=0),paper_bgcolor="#2C353C")
+
         return fig
 
     return _render_default(all_data, id)
 
-def _get_hover_template(primary_feature, secondary_feature) -> str:
-
-    titleIndex = -1
-    """
-    #This code is used to select the secondary feature as a title instead when selected.
-    if secondary_feature == []:
-        titleIndex = GLOBAL_CUSTOM_DATA.index(primary_feature)
+def _get_hover_template(color_feature) -> str:
+    if(color_feature in GLOBAL_CUSTOM_DATA):
+        titleIndex = GLOBAL_CUSTOM_DATA.index(color_feature)
     else:
-        titleIndex = GLOBAL_CUSTOM_DATA.index(secondary_feature)
-    """
-    titleIndex = GLOBAL_CUSTOM_DATA.index(primary_feature)
+        titleIndex = 0
 
     return "<b>Selected: %{customdata["+str(titleIndex)+"]}</b><br>" +\
             "%{customdata["+str(GLOBAL_CUSTOM_DATA.index("Provoked/unprovoked"))+"]} " +\
-            "Attack occured on %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Incident.month"))+"]}" +\
-            " %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Incident.year"))+"]}<br>" +\
-            "%{customdata["+str(GLOBAL_CUSTOM_DATA.index("State"))+"]} State, " +\
-            "Site Type; %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Site.category"))+"]} <br>" +\
-        "Victim %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Victim.age"))+"]}%{customdata["+str(GLOBAL_CUSTOM_DATA.index("Victim.gender"))+"]}" +\
-        " was partaking in; %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Victim.activity"))+"]}" +\
-        "Injury severity; %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Injury.severity"))+"]}<br>" +\
-        "Shark species; %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Shark.name"))+"]}<br>" +\
-        "Informed by; %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Data.source"))+"]}"
+            "attack occured in %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Incident.month"))+"]}" +\
+            " %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Incident.year"))+"]}" +\
+            " at a %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Site.category"))+"]} site" +\
+            " in %{customdata["+str(GLOBAL_CUSTOM_DATA.index("State"))+"]}.<br>" +\
+        "Victim (%{customdata["+str(GLOBAL_CUSTOM_DATA.index("Victim.age"))+"]}%{customdata["+str(GLOBAL_CUSTOM_DATA.index("Victim.gender"))+"]})" +\
+        " was %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Victim.activity"))+"]} at time of incident.<br>" +\
+        "Victim sustained %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Injury.severity"))+"]}" +\
+        " at the hands of a %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Shark.name"))+"]}.<br>" +\
+        "Source: %{customdata["+str(GLOBAL_CUSTOM_DATA.index("Data.source"))+"]}"
 
 #Renders a default map with all points included. Nothing special
 def _render_default(data: DataFrame, id: str) -> dcc.Graph:
-    fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name", width=1000, height=700, zoom=3,
+    fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name", width=1000, height=860, zoom=3,
                          custom_data=["UID"],
                          hover_data=["UID","Present.at.time.of.bite", "Shark.behaviour","Victim.injury","Injury.location","Diversionary.action.taken"],
                          color=None)
-    fig.update_layout(map=dict(style="dark"))  # Dark, Light, Satelite
+    fig.update_layout(map=dict(style="dark"), font_color="#bcbcbc")  # Dark, Light, Satelite
+    fig.update_layout(margin=dict(l=0, r=0, t=40, b=0),paper_bgcolor="#2C353C")
     return dcc.Graph(figure=fig, id=id)

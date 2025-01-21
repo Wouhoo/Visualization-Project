@@ -15,7 +15,7 @@ def render(app: Dash, data: DataFrame, id: str) -> html.Div:
         Input('slider', 'value')         # Input: the slider value
     )
     def update_title(input_year):
-    # Get the start and end year from the slider value
+        # Get the start and end year from the slider value
         start_year, end_year = input_year
         return f"Incidents from {start_year} until {end_year}"
     
@@ -25,7 +25,7 @@ def render(app: Dash, data: DataFrame, id: str) -> html.Div:
     )
 
     def update_graph(input_year):
-                # Filtered dynamic data
+        # Filtered dynamic data
         filtered_data = data[(data['Incident.year'] >= input_year[0]) & (data['Incident.year'] <= input_year[1])]
 
         # Dynamic histogram for filtered data
@@ -35,7 +35,7 @@ def render(app: Dash, data: DataFrame, id: str) -> html.Div:
             marker_color = "blue",
             opacity=0.7, 
             name="",
-            hovertemplate="Year: %{x}<br>Incidents: %{y}<br>%{fullData.name}" 
+            hovertemplate="<b>Selected years:</b><br>Year: %{x}<br>Incidents: %{y}<br>%{fullData.name}" 
         )
 
         # Static plot trace (remains the same)
@@ -44,6 +44,8 @@ def render(app: Dash, data: DataFrame, id: str) -> html.Div:
             xbins=dict(size=1),
             marker_color='grey',
             opacity=0.4, 
+            name="",
+            hovertemplate="<b>Unselected years:</b><br>Year: %{x}<br>Incidents: %{y}<br>%{fullData.name}" 
         )
 
         # Combine both traces in a single figure
@@ -56,12 +58,18 @@ def render(app: Dash, data: DataFrame, id: str) -> html.Div:
         )
         fig.update_xaxes(visible=False, showticklabels=False)
 
+        fig.update_layout(
+            paper_bgcolor="#2C353C",
+            font=dict(color='#bcbcbc'),  # Text color
+            margin=dict(l=0, r=20, t=50, b=50)  # Adjust left (l), right (r), top (t), bottom (b) margins
+        )
+
         return fig
         
 
     return html.Div(
             children = [
-                html.H6(id = "timetitle", children = f"Incidents from {min_year} until {max_year}", className="timetitle"),
+                html.H6(id = "timetitle", children = f"Incidents from {min_year} until {max_year}", className="timetitle", style={'textAlign': 'center'}),
                 dcc.Graph(id = "timehist", className="timehist"),
                 dcc.RangeSlider(
                     min_year,
@@ -81,8 +89,3 @@ def render(app: Dash, data: DataFrame, id: str) -> html.Div:
                 )
             ]
         )
-        
-        
-
-
-

@@ -1,57 +1,162 @@
 /* General Styles */
 body {
-    background-color: #f8f9fa;
+    background-color: #20272c;
+    color: #a1a0a0;
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
+    overflow: hidden; /* Prevent scrolling for the entire page */
 }
 
 /* App Div Style */
 .app-div {   
-    margin: 20px;
+    margin: 0;
     display: flex;
     flex-direction: row;
     gap: 10px; /* Space between columns */
     justify-content: space-between;
+    height: 100vh; /* Full viewport height */
+    box-sizing: border-box; /* Ensure padding is accounted for */
 }
 
-.left-col{
+/* Left Column */
+.left-col {
     flex: 1;
     width: 34%;
+    height: 100%; /* Take full height of the parent */
+    overflow-y: auto; /* Allow scrolling within this column */
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    padding: 10px;
+    box-sizing: border-box;
 }
 
-.right-col{
+/* Right Column */
+.right-col {
     flex: 1;
     width: 64%;
+    height: 100%; /* Ensure the map takes the full height */
+    overflow: hidden; /* Prevent scrolling */
+    padding: 10px;
+    box-sizing: border-box;
 }
 
-.bar_plot{
-    margin: auto;
+/* Clear Selection Button */
+#clear_selection_button {
+    font-family: monospace;
+    padding: 12px 20px;
+    font-size: 20px;
+    font-weight: bold;
+    width: 120px; 
+    height: 45px;  
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #4d1c1c, #db0404); /* Gradient effect */
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    text-align: center; 
+    white-space: nowrap; 
 }
 
-.drop_down{
+/* Hover state for the button */
+#clear_selection_button:hover {
+    background-color: #3b1616; /* Darker blue on hover */
+    transform: scale(1.05); /* Slightly enlarge the button */
+}
+
+/* Timeline Container */
+.TimeLine {
+    overflow: hidden; /* Prevent scrolling within this container */
+    margin-bottom: 25px;
+    margin-top: 10px;
+}
+
+/* Dropdown Container */
+.drop_down {
     width: 50%; 
     display: block;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 20px;
+    margin: 20px auto; /* Center and space dropdowns */
 }
 
-
-/* .timeline-container{
-    width: 100%;
-    margin: 0;
-} */
-
-.timetitle{
-    text-align: center;
-    margin-top: 40px;
+/* Toggle Button */
+#toggle-button {
+    font-family: monospace;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    width: 120px; 
+    height: 45px;  
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1c334d, #0477db); /* Gradient effect */
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.timehist{
-    height: 300px;
-    margin-left: -60px;
-    margin-right: -60px;
-    margin-bottom: -50px;
+/* Hover state for the button */
+#toggle-button:hover {
+    background-color: #0e243b; /* Darker blue on hover */
+    transform: scale(1.05); /* Slightly enlarge the button */
 }
+
+.Checklist input[type="checkbox"] {
+    margin-right: 5px; /* Space between the checkbox and the text */
+    height: 16px; /* Checkbox height */
+    width: 20px;
+}
+
+/* Style the scrollbar */
+.left-col::-webkit-scrollbar {
+    width: 10px;  /* Set width of the scrollbar */
+}
+
+/* Style the scrollbar track (background) */
+.left-col::-webkit-scrollbar-track {
+    background-color: #2C353C;  /* Set track color */
+    border-radius: 10px;         /* Rounded corners */
+}
+
+/* Style the scrollbar thumb (the draggable part) */
+.left-col::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #1c334d, #0477db);
+    border-radius: 10px;     /* Rounded corners */
+    border: 2px solid #969696; /* Border around the thumb */
+}
+
+/* Style the scrollbar when hovering over the thumb */
+.left-col::-webkit-scrollbar-thumb:hover {
+    background-color: #555;  /* Change thumb color when hovering */
+}
+
+/* input box */
+.drop_down .Select-control {
+    background-color: rgb(255, 255, 255);  /* Input box background color */
+}
+
+/* changes the text color of input box */
+.drop_down .Select-value-label {
+    color: rgb(0, 0, 0) !important;  /* Text color of the input box */
+}
+
+.drop_down .Select--single > .Select-control .Select-value, 
+.drop_down .Select-placeholder {
+    border: 1px solid white;  /* Border around the input box */
+    border-radius: 4px;  /* Border radius of the input box */
+}
+
+/* dropdown menu options */
+.drop_down .VirtualizedSelectOption {
+    background-color: white;  /* Background color of dropdown options */
+    color: rgb(29, 29, 29);  /* Text color of dropdown options */
+}
+
+.drop_down .VirtualizedSelectFocusedOption {
+    background-color: rgb(238, 238, 238);  /* Subtle light gray hover background */
+    color: rgb(0, 0, 0);  /* Text color on hover */
+    transition: background-color 0.1s ease, color 0.1s ease;  /* Smooth color transition */
+}
+
 
