@@ -2,7 +2,7 @@ import plotly.express as px
 from dash import Dash, dcc, ctx
 from pandas import DataFrame
 from dash.dependencies import Input, Output, State
-from .data_cleaning import MONTH_ORDER, GRAYED_OUT_COLOR
+from .data_cleaning import MONTH_ORDER, GRAYED_OUT_COLOR, UNSELECTED_OPACITY
 
 #Predefined colors for specific attributes
 PREDEFINED_COLORS = {"Provoked/unprovoked": ["#00c49d","#c42e00","#dbdbdb"],
@@ -20,6 +20,19 @@ String id - A unique ID not used by any other component in our app
 
 @Returns: A Dcc.Graph of a scatter map
 """
+
+### A WORD OF WARNING: SCATTERMAP TRACES ###
+# If *no* color attribute is selected, all points belong to the same trace.
+# In this case, the update_traces method can be applied directly to modify the one trace;
+# for example, fig.update_traces(marker_opacity=data['selected']) reduces the opacity of unselected points.
+# If a color attribute *is* selected, there are several traces (one for each unique value of the attribute), with the points divided among them.
+# For example, if "State" is selected as the color attribute, there are traces for "NSW", "NT", "QLD", etc., each with their own color and array of points.
+# In this case, update_traces *updates all traces at once*, and *should not be used to update individual traces*.
+# DASH DOES NOT THROW AN ERROR when you e.g. try to set marker_opacity with an array longer than the array of points in that trace;
+# this is why it took us so f*cking long to figure out what was up.
+# Instead, use for_each_trace with a different update depending on the trace's name. For example, to reduce the opacity of unselected points:
+# fig.for_each_trace(lambda trace: trace.update(marker_opacity = data.loc[data[color_feature] == trace.name, 'selected']))
+
 def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
     @app.callback(
         Output("map", "figure"),
@@ -47,6 +60,9 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
                                  zoom=3,
                                  custom_data=GLOBAL_CUSTOM_DATA)
             fig.update_traces(marker_color=data['highlighted'])
+            fig.update_traces(marker_opacity=data['selected'])  # Reduce opacity of unselected points
+            fig.update_traces(hoverinfo="text", 
+                              hovertemplate=[None if hoverable == 0 else _get_hover_template(color_feature) for hoverable in data['selected']]) # Set Hoverable template for all points. Points that are NOT selected (aka not visible) have no hover info.
 
         # Otherwise, change color based on primary color attribute if one is selected
         elif not(color_feature is None or color_feature == []):
@@ -60,6 +76,9 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
                         zoom=3,
                         custom_data=GLOBAL_CUSTOM_DATA,
                         color=color_feature, labels={color_feature: color_feature.replace(".", " ")})
+            fig.for_each_trace(lambda trace: trace.update(marker_opacity = data.loc[data[color_feature] == trace.name, 'selected']))  # Reduce opacity of unselected points
+            fig.for_each_trace(lambda trace: trace.update(hoverinfo="text", 
+                                                          hovertemplate=[None if hoverable == UNSELECTED_OPACITY else _get_hover_template(color_feature) for hoverable in data.loc[data[color_feature] == trace.name, 'selected']])) # Set Hoverable template for all points. Points that are NOT selected (aka not visible) have no hover info.
 
         # If no primary color attribute is selected, grey out all points
         else:
@@ -68,25 +87,11 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
                                  zoom=3,
                                  custom_data=GLOBAL_CUSTOM_DATA,
                                  color=None, color_discrete_sequence=colorSeq)
+            fig.update_traces(marker_opacity=data['selected'])  # Reduce opacity of unselected points
+            fig.update_traces(hoverinfo="text", hovertemplate=[None if hoverable == 0 else _get_hover_template(color_feature) for hoverable in data['selected']]) # Set Hoverable template for all points. Points that are NOT selected (aka not visible) have no hover info.
         
-        # Set map to dark mode, make unselected points transparent & return figure
+        # Set map to dark mode & return figure
         fig.update_layout(map_style="dark")  # Dark, Light, Satelite
-        #fig.update_traces(marker_opacity=data['selected'])
-        fig.for_each_trace(lambda trace: trace.update(marker_opacity = data.loc[data[color_feature] == trace.name, 'selected']))
-        # Unsuccesful tests
-        #fig.for_each_trace("TRACE IDs: ", lambda trace: print(trace.name, ": ", trace.ids))  # Always None fsr...
-        #fig.update_traces(selectedpoints=data.loc[data['selected']==1].index)
-        #fig.update_traces(selectedpoints=data.loc[data['selected']==1, 'UID'])
-
-        #Set Hoverable template for all points. Points that are NOT selected (aka not visible) have no hover info.
-        fig.update_traces(
-            hoverinfo="text",
-            hovertemplate=[
-                None if hoverable == 0 else _get_hover_template(color_feature)
-                for hoverable in data['selected']
-            ]
-        )
-
         fig.update_layout(map=dict(style="dark"), font_color="#bcbcbc")  # Dark, Light, Satelite
         fig.update_layout(margin=dict(l=0, r=0, t=40, b=0),paper_bgcolor="#2C353C")
 

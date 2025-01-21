@@ -22,7 +22,7 @@ GROUPABLE_FEATURES = ["Incident.year", "Site.category", "No.sharks", "Victim.act
 MONTH_ORDER = {'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6, 'JUL': 7, 'AUG': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DEC': 12}
 
 # Opacity of points not selected on the map
-UNSELECTED_OPACITY = 0
+UNSELECTED_OPACITY = 0.05
 GRAYED_OUT_COLOR = '#bababa'
 
 app = Dash(__name__)
@@ -53,7 +53,7 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
         if(map_selected_data is None):
             filtered_data['selected'] = [1]*len(filtered_data)  # In this case all data is selected
         else:
-            print("MAP DATA: ", [point['customdata'][0] for point in map_selected_data['points']])
+            #print("MAP DATA: ", [point['customdata'][0] for point in map_selected_data['points']])  # TEST
             selected_ids = [point['customdata'][0] for point in map_selected_data['points']]  # Row numbers of selected points
             filtered_data['selected'] = filtered_data['UID'].apply(lambda id: 1 if id in selected_ids else UNSELECTED_OPACITY) 
 
