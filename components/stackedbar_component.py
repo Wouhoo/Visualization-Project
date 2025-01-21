@@ -85,7 +85,8 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
 
         # Make initial plot
         selected_sequence = PLOTLY_DEFAULT_COLORS
-        fig = px.bar(all_combinations, x=primary_color_feature, y=y_feature, color=secondary_color_feature, color_discrete_sequence=selected_sequence)
+        fig = px.bar(all_combinations, x=primary_color_feature, y=y_feature, color=secondary_color_feature, color_discrete_sequence=selected_sequence,
+                     labels={primary_color_feature: primary_color_feature.replace(".", " "), y_feature: y_feature.title(), secondary_color_feature: secondary_color_feature.replace(".", " ")})
 
         # If the user clicks a bar, grey out all other bars
         if trigger == "stacked_bar":

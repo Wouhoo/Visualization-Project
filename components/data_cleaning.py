@@ -23,6 +23,7 @@ MONTH_ORDER = {'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6, 'JUL'
 
 # Opacity of points not selected on the map
 UNSELECTED_OPACITY = 0
+GRAYED_OUT_COLOR = '#bababa'
 
 app = Dash(__name__)
 
@@ -52,11 +53,9 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
         if(map_selected_data is None):
             filtered_data['selected'] = [1]*len(filtered_data)  # In this case all data is selected
         else:
+            print("MAP DATA: ", [point['customdata'][0] for point in map_selected_data['points']])
             selected_ids = [point['customdata'][0] for point in map_selected_data['points']]  # Row numbers of selected points
             filtered_data['selected'] = filtered_data['UID'].apply(lambda id: 1 if id in selected_ids else UNSELECTED_OPACITY) 
-
-
-
 
         ### Group low-frequency points ###
         # Group low-frequency points into an "other" category to reduce clutter (particularly in the bar and PC plots) 
@@ -74,35 +73,35 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
 
             # Default bar chart
             if(secondary_color_feature is None or secondary_color_feature == []):
-                filtered_data["highlighted"] = filtered_data[primary_color_feature].apply(lambda x : selected_color if x == selected_x_value else "#bababa")  # Select incidents to highlight
+                filtered_data["highlighted"] = filtered_data[primary_color_feature].apply(lambda x : selected_color if x == selected_x_value else GRAYED_OUT_COLOR)  # Select incidents to highlight
 
             # Stacked bar chart
             else:
                 color_names = filtered_data[secondary_color_feature].value_counts().index.tolist()  # Unique values for barplot color feature
                 color_names = sorted(color_names)  # Sort alphabetically
                 selected_color_value = color_names[color_index]  # Color feature value corresponding to the selected sub-bar
-                filtered_data["highlighted"] = filtered_data.apply(lambda row : selected_color if (row[primary_color_feature] == selected_x_value and row[secondary_color_feature] == selected_color_value) else "#bababa", axis=1)
+                filtered_data["highlighted"] = filtered_data.apply(lambda row : selected_color if (row[primary_color_feature] == selected_x_value and row[secondary_color_feature] == selected_color_value) else GRAYED_OUT_COLOR, axis=1)
         
         # User clicked on parcat bar
         elif trigger == "parcat":
-            print("PARCAT POINTS CLICKED:", parcat_clicked)  # TEST
+            #print("PARCAT POINTS CLICKED:", parcat_clicked)  # TEST
             # NOTE: This selected color is currently *always blue*, since color_index is always 0 (all parts of the parcat plot have curveNumber 0)
             # I can think of *some* ways in which we could preserve the color, but they are pretty roundabout.
             # Instead, we could just always use one color, like below:
             selected_color = '#FFFFFF'  # Solid white - currently hard to see in the PCP, but this will hopefully change when we switch to dark mode
             clicked_points = [point['pointNumber'] for point in parcat_clicked['points']]  # Parcat gives us the dataframe IDs of all clicked points
-            filtered_data['highlighted'] = ["#c7c7c7"]*len(filtered_data)
+            filtered_data['highlighted'] = [GRAYED_OUT_COLOR]*len(filtered_data)
             filtered_data.loc[filtered_data.index.isin(clicked_points), 'highlighted'] = selected_color  # Color only clicked points
             #filtered_data['highlighted'] = filtered_data.apply(lambda row: selected_color if (row['UID'] in clicked_points and row['selected'] == 1) else '#bababa', axis=1)  # Color only clicked points
         
         # User clicked on clear selection button: clear both map selection and highlights
         elif trigger == "clear_selection_button":
             filtered_data['selected'] = [1]*len(filtered_data)
-            filtered_data['highlighted'] = ["#c7c7c7"]*len(filtered_data)
+            filtered_data['highlighted'] = [GRAYED_OUT_COLOR]*len(filtered_data)
 
         # User clicked something else: clear highlights
         else:
-            filtered_data['highlighted'] = ["#c7c7c7"]*len(filtered_data)
+            filtered_data['highlighted'] = [GRAYED_OUT_COLOR]*len(filtered_data)
 
         # Return data with correct filtering/highlighting
         return filtered_data.to_dict()  # Note: data is stored as JSON, so it has to be converted to JSON and then converted back when reading it in another component
