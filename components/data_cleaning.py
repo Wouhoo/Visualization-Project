@@ -84,15 +84,15 @@ def store(app: Dash, id: str, all_data: DataFrame)-> dcc.Store:
         
         # User clicked on parcat bar
         elif trigger == "parcat":
-            #print("PARCAT POINTS CLICKED:", parcat_clicked)  # TEST
-            # NOTE: This selected color is currently *always blue*, since color_index is always 0 (all parts of the parcat plot have curveNumber 0)
-            # I can think of *some* ways in which we could preserve the color, but they are pretty roundabout.
-            # Instead, we could just always use one color, like below:
-            selected_color = '#FFFFFF'  # Solid white - currently hard to see in the PCP, but this will hopefully change when we switch to dark mode
-            clicked_points = [point['pointNumber'] for point in parcat_clicked['points']]  # Parcat gives us the dataframe IDs of all clicked points
-            filtered_data['highlighted'] = [GRAYED_OUT_COLOR]*len(filtered_data)
-            filtered_data.loc[filtered_data.index.isin(clicked_points), 'highlighted'] = selected_color  # Color only clicked points
-            #filtered_data['highlighted'] = filtered_data.apply(lambda row: selected_color if (row['UID'] in clicked_points and row['selected'] == 1) else '#bababa', axis=1)  # Color only clicked points
+            #print("PARCAT POINTS CLICKED:", [point['pointNumber'] for point in parcat_clicked['points']])  # TEST
+            # For a variety of reasons, getting the color of whatever you clicked in the PCP is very hard.
+            # That's why we instead use the unique "brushing color" below, which is exclusive to the PCP to highlight points.
+            brushing_color = '#FFFFFF'
+            clicked_points = [point['pointNumber'] for point in parcat_clicked['points']]  # This is the indices of the points which have been clicked
+            # Problem: the numbers here are the indices of *only the selected points, renumbered from 0*. That's why we have to do this roundabout shit:
+            selected_UIDs = filtered_data.loc[filtered_data['selected'] == 1, 'UID'].reset_index()  # Get UIDs of selected points & renumber them
+            selected_UIDs = selected_UIDs.loc[selected_UIDs.index.isin(clicked_points), 'UID'].tolist()  # Keep only the ones that were clicked in the PCP
+            filtered_data['highlighted'] = filtered_data['UID'].apply(lambda uid: brushing_color if (uid in selected_UIDs) else GRAYED_OUT_COLOR)  # Color only clicked points (determined by UID)
         
         # User clicked on clear selection button: clear both map selection and highlights
         elif trigger == "clear_selection_button":
