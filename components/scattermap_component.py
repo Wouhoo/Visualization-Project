@@ -71,7 +71,8 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
         
         # Set map to dark mode, make unselected points transparent & return figure
         fig.update_layout(map_style="dark")  # Dark, Light, Satelite
-        fig.update_traces(marker_opacity=data['selected'])
+        #fig.update_traces(marker_opacity=data['selected'])
+        fig.for_each_trace(lambda trace: trace.update(marker_opacity = data.loc[data[color_feature] == trace.name, 'selected']))
         # Unsuccesful tests
         #fig.for_each_trace("TRACE IDs: ", lambda trace: print(trace.name, ": ", trace.ids))  # Always None fsr...
         #fig.update_traces(selectedpoints=data.loc[data['selected']==1].index)

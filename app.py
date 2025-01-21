@@ -25,7 +25,7 @@ def create_layout(app: Dash) -> html.Div:
                 style={"padding": "10px", "textAlign": "center", "display": "flex", "flexDirection": "column", "gap": "10px"},
                 children=[
                     html.Button("Display Plots", id="toggle-button", n_clicks=0, style={"padding": "10px", "fontSize": "16px"}),
-                    html.Button('Clear Plot', id='clear_selection_button', style={"padding": "10px", "fontSize": "16px"})
+                    html.Button('Clear Plots', id='clear_selection_button', style={"padding": "10px", "fontSize": "16px"})
                 ]
             ),
             html.Div( 
