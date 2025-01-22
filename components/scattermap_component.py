@@ -56,7 +56,7 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
         # If a bar is clicked in the barplot or PCP, change color based on the highlighted bar
         if any([color != GRAYED_OUT_COLOR for color in data['highlighted']]):
             data = data.sort_values('highlighted', ascending=False)  # Sort so highlighted points are drawn on top
-            fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name", width=1000, height=700,
+            fig = px.scatter_map(data, lat="Latitude", lon="Longitude", hover_name="Shark.name",
                                  zoom=3,
                                  custom_data=GLOBAL_CUSTOM_DATA)
             fig.update_traces(marker_color=data['highlighted'])

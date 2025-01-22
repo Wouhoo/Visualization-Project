@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from dash import Dash, html, dcc, Input, Output
 from dash_bootstrap_components.themes import BOOTSTRAP
 
@@ -8,6 +9,7 @@ app = Dash(external_stylesheets=[BOOTSTRAP])
 
 # Read in data
 df = pd.read_excel('sharks_clean.xlsx')
+df["Victim.age"] = df["Victim.age"].apply(lambda x : "" if np.isnan(x) else str(int(x)))
 
 # Options for dropdowns
 plotable_columns = ["Incident.month", "Victim.injury", "State", "Site.category", "Provoked/unprovoked", # "Present.at.time.of.bite", "Injury.location", # These two attributes have a lot of unknown/other values, but might still give insights
