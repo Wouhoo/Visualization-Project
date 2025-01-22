@@ -88,9 +88,10 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         
         fig.update_layout(
             paper_bgcolor="#2C353C",
-            font=dict(color='#bcbcbc')  # Text color
+            font=dict(color='#bcbcbc'),  # Text color
+            margin=dict(l=20,r=20,t=20,b=20)
         )  # Stack bars on top of each other
 
         return fig
     
-    return dcc.Graph(id = id)
+    return html.Div(children= [html.H5('Title', style={'textAlign': 'center'}), dcc.Graph(id = id)],style={'backgroundColor': '#2C353C','margin-top': '10px', 'padding': '10px',})

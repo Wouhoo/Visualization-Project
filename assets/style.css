@@ -68,9 +68,23 @@ body {
 /* Timeline Container */
 .TimeLine {
     overflow: hidden; /* Prevent scrolling within this container */
-    margin-bottom: 25px;
-    margin-top: 10px;
 }
+
+.timeslider .rc-slider-rail {
+    background-color:#20272c;  /* Darker color for the rail */
+}
+
+.timeslider .rc-slider-handle {
+    background-color: #007bff !important;  /* Customize the thumb color */
+}
+
+.timeslider .rc-slider-mark-text {
+    color: #6b6b6b;  /* Dark grey for unselected text */
+}
+
+.timeslider .rc-slider-mark-text-active {
+    color: #bcbcbc;  /* Blue for selected text */
+}   
 
 /* Dropdown Container */
 .drop_down {

@@ -38,7 +38,11 @@ def create_layout(app: Dash) -> html.Div:
                         className="data_store",
                         children=[
                             data_cleaning.store(app, id="data_store", all_data=df)
-                        ]),
+                        ],
+                        style={
+                            'backgroundColor': '#2C353C',  # Same background color as the plot
+                        }
+                        ),
                     # Old barplot
                     #html.Div(
                     #    className = "bar_plot",
@@ -50,7 +54,8 @@ def create_layout(app: Dash) -> html.Div:
                         className = "stacked_bar",
                         children=[
                             stackedbar_component.render(app, id="stacked_bar", all_data=df),
-                        ]),
+                        ]
+                        ),
                     # Parallel categories plot
                     html.Div(
                         className = "parcat",
