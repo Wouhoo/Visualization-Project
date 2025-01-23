@@ -12,7 +12,7 @@ bool is_multiple_choice - True if we can select more than one item. False by def
 
 @Return A Div object containing a dropdown menu.
 """
-def render(app: Dash, id: str, name: str, values: list|dict, is_multiple_choice: bool = False) -> html.Div:
+def render(app: Dash, id: str, name: str, values: list|dict, default_value: str|list, is_multiple_choice: bool = False) -> html.Div:
     dropdown_options = ["Option 1", "Option 2", "Option 3"] if values is None else values
     choices = None
     if type(values) is list:
@@ -28,7 +28,7 @@ def render(app: Dash, id: str, name: str, values: list|dict, is_multiple_choice:
             dcc.Dropdown(
                 id=id,
                 multi=is_multiple_choice,
-                value=[],
+                value=default_value,
                 options=choices
             )
         ]
