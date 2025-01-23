@@ -45,12 +45,6 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
         else:
             color_feature = primary_color_feature
 
-        # Find highest-priority color feature
-        if not(secondary_color_feature is None or secondary_color_feature == []):
-            color_feature = secondary_color_feature
-        else:
-            color_feature = primary_color_feature
-
         # Make PCP with color according to selected dropdown values
         # If anything is brushed, apply brushing colors - this is highest priority.
         if any([color != GRAYED_OUT_COLOR for color in filtered_data['highlighted']]):
@@ -64,19 +58,16 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
             #fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=color_feature)
             # However, for some godforsaken reason it won't work, so that's why we do this mess instead:
             barplot_x_values = filtered_data[color_feature].value_counts().index.tolist()  # Get unique values for barplot x attribute
-            barplot_x_values = filtered_data[color_feature].value_counts().index.tolist()  # Get unique values for barplot x attribute
             # Sort months according to special ordering, otherwise sort alphabetically
             if(color_feature == 'Incident.month'):
                 barplot_x_values = sorted(barplot_x_values, key=lambda x: MONTH_ORDER[x])
             else:
                 barplot_x_values = sorted(barplot_x_values)
             colors = filtered_data[color_feature].apply(lambda x: PLOTLY_DEFAULT_COLORS[barplot_x_values.index(x) % len(PLOTLY_DEFAULT_COLORS)])  # Color according to attribute value
-            colors = filtered_data[color_feature].apply(lambda x: PLOTLY_DEFAULT_COLORS[barplot_x_values.index(x) % len(PLOTLY_DEFAULT_COLORS)])  # Color according to attribute value
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=colors)
             
         # Otherwise, don't apply color at all
         else:
-            colors = [GRAYED_OUT_COLOR]*len(filtered_data)
             colors = [GRAYED_OUT_COLOR]*len(filtered_data)
             fig = px.parallel_categories(filtered_data, dimensions=selected_features, color=colors)
 

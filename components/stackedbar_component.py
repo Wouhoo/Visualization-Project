@@ -119,8 +119,6 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
             margin=dict(l=20,r=20,t=10,b=20)
         )  # Stack bars on top of each other
 
-
         return fig, ['Shark Incidents per {}'.format(primary_color_feature.replace("."," "))]
-    
     
     return html.Div( children= [html.H5('Shark Incidents per [Primary color attribute]', style={'textAlign': 'center'}, id='barplot_title'), dcc.Graph(id = id)], style={'backgroundColor': '#2C353C', 'padding': '10px',})

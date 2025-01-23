@@ -91,7 +91,6 @@ def render(app: Dash, all_data: DataFrame, id: str) -> dcc.Graph:
             fig.update_traces(hoverinfo="text", hovertemplate=[None if hoverable == 0 else _get_hover_template(color_feature) for hoverable in data['selected']]) # Set Hoverable template for all points. Points that are NOT selected (aka not visible) have no hover info.
         
         # Set map to dark mode & return figure
-        fig.update_layout(map_style="dark")  # Dark, Light, Satelite
         fig.update_layout(map=dict(style="dark"), font_color="#bcbcbc")  # Dark, Light, Satelite
         fig.update_layout(margin=dict(l=0, r=0, t=40, b=0),paper_bgcolor="#2C353C")
 
