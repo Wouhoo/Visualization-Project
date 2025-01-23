@@ -2,7 +2,7 @@
 A tool for visualizing shark incidents in Australia, developed by Group 31 (T. Fotoglou, C. Koster, W. Leenen, N. Taflampas) for the Visualization course @ TU/e. The tool visualizes the ASID database, which can be found here: https://github.com/cjabradshaw/AustralianSharkIncidentDatabase.
 
 ## How to run the app
-Simply run app.py in any Python 3.10+ environment, and go to the link shown in the terminal in your browser (by default this is http://127.0.0.1:8050/). The python environment needs to have several packages installed; we recommend anaconda, which has most of them pre-installed. Any packages not found in anaconda by default can be found in requirements.txt and can be installed using the console command `pip install -r requirements.txt`.
+Simply run `app.py` in any Python 3.10+ environment, and go to the link shown in the terminal in your browser (by default this is http://127.0.0.1:8050/). The python environment needs to have several packages installed; we recommend anaconda, which has most of them pre-installed. Any packages not found in anaconda by default can be found in `requirements.txt` and can be installed using the console command `pip install -r requirements.txt`.
 
 ## Code structure
 On a high level, the code is structured as follows:
