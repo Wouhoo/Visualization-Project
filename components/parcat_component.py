@@ -94,4 +94,4 @@ def render(app: Dash, id: str, data: DataFrame)-> dcc.Graph:
 
         return fig
     
-    return html.Div(children= [html.H5('Title', style={'textAlign': 'center'}), dcc.Graph(id = id)],style={'backgroundColor': '#2C353C','margin-top': '10px', 'padding': '10px',})
+    return html.Div(children= [html.H5('Shark Incidents Related by Selected Attributes', style={'textAlign': 'center'}), dcc.Graph(id = id)],style={'backgroundColor': '#2C353C','margin-top': '10px', 'padding': '10px',})

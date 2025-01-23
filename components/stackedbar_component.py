@@ -122,4 +122,4 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
         return fig
     
     
-    return html.Div( children= [html.H5('Title', style={'textAlign': 'center'}), dcc.Graph(id = id)], style={'backgroundColor': '#2C353C', 'padding': '10px',})
+    return html.Div( children= [html.H5('Shark Incidents per Selected Primary Color Attribute', style={'textAlign': 'center'}), dcc.Graph(id = id)], style={'backgroundColor': '#2C353C', 'padding': '10px',})
