@@ -25,6 +25,7 @@ PLOTLY_DEFAULT_COLORS = ['#636EFA','#EF553B','#00CC96','#AB63FA','#FFA15A','#19D
 def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
     @app.callback(
         Output("stacked_bar", "figure"),
+        Output("barplot_title", 'children'),
         [Input("data_store", "data"),
          Input("primary_color_dropdown", "value"),
          Input("secondary_color_dropdown", "value"),
@@ -38,12 +39,12 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
         filtered_data = DataFrame(data)  # Convert JSON data to pandas dataframe
         filtered_data = filtered_data.loc[filtered_data['selected'] == 1]  # Use only points selected on the map
         if(len(filtered_data) == 0):
-            return px.bar(None)
+            return px.bar(None), ['Shark Incidents per [Primary color attribute]']
 
         trigger = ctx.triggered_id
 
         if primary_color_feature is None or primary_color_feature == []:
-            return px.bar(None)
+            return px.bar(None), ['Shark Incidents per [Primary color attribute]']
         else:
             if secondary_color_feature is None or secondary_color_feature == []: # Effectively this uses the default bar chart if no color attribute is selected
                 secondary_color_feature = primary_color_feature
@@ -119,7 +120,7 @@ def render(app: Dash, id: str, all_data: DataFrame)-> dcc.Graph:
         )  # Stack bars on top of each other
 
 
-        return fig
+        return fig, ['Shark Incidents per {}'.format(primary_color_feature.replace("."," "))]
     
     
-    return html.Div( children= [html.H5('Shark Incidents per Selected Primary Color Attribute', style={'textAlign': 'center'}), dcc.Graph(id = id)], style={'backgroundColor': '#2C353C', 'padding': '10px',})
+    return html.Div( children= [html.H5('Shark Incidents per [Primary color attribute]', style={'textAlign': 'center'}, id='barplot_title'), dcc.Graph(id = id)], style={'backgroundColor': '#2C353C', 'padding': '10px',})

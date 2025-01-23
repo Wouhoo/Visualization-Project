@@ -125,4 +125,9 @@ def _render_default(data: DataFrame, id: str) -> dcc.Graph:
                          color=None)
     fig.update_layout(map=dict(style="dark"), font_color="#bcbcbc")  # Dark, Light, Satelite
     fig.update_layout(margin=dict(l=0, r=0, t=40, b=0),paper_bgcolor="#2C353C")
-    return dcc.Graph(figure=fig, id=id)
+    return dcc.Graph(figure=fig, id=id, style={
+            "width": "100%",    # Make the graph take full width of the parent container
+            "height": "95vh",   # Height dynamically adjusts to 75% of the viewport height
+            "display": "block", # Ensures proper layout
+            "margin": "0 auto"  # Center it horizontally (optional)
+        })
